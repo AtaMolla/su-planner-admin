@@ -15,6 +15,8 @@
   // ---------- Rooms from SU's room list (type, seats) ----------
   const RD = window.ROOM_DATA || { rooms: [] };
   const META = new Map(RD.rooms.map(([b, code, name, type, seats]) => [`${b} ${code}`, { building: b, code, name, type: type || 'Other', seats }]));
+  // Rooms left out of the list on purpose (not for teaching, or 18 seats or fewer).
+  const REMOVED = new Set(RD.removed || []);
 
   // ---------- Occupancy per term: roomId -> slots[65] = [{code, type, groups}] ----------
   function occupancy(data) {
@@ -25,7 +27,7 @@
           for (const m of s.schedule) {
             if (m.start < 0 || m.day < 0 || m.day > 4) continue;
             const room = A.roomOf(data.places[m.place]);
-            if (!room) continue;
+            if (!room || REMOVED.has(room.id)) continue;
             if (!busy.has(room.id)) busy.set(room.id, { ...room, slots: Array.from({ length: SLOTS }, () => []) });
             const slots = busy.get(room.id).slots;
             for (let k = 0; k < m.duration && m.start + k < ROWS; k++) {
