@@ -1,6 +1,6 @@
 # SU Planner Admin
 
-The staff side of [SU Planner](https://atamolla.github.io/su-planner/): four views that help Sabancı
+The staff side of [SU Planner](https://atamolla.github.io/su-planner/): six views that help Sabancı
 University (SU) administration see the course schedule and the curricula at a glance.
 Live at https://atamolla.github.io/su-planner-admin/.
 
@@ -82,6 +82,28 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
   registration system, Banner)
 - `data/rooms.js`: rooms with type, seats and equipment (`tools/build_rooms.py`)
 
+### Timetable model (`model.html`)
+
+- Results of the IE 312 class scheduling model (integer program in Gurobi, `class_scheduling.py` in
+  the term project folder `ie312-class-scheduling`, next to this repo). Running it rewrites
+  `data/model-result.js`.
+- Tiles: class hours kept at SU's time, classes moved, locked first-year classes, teaching rooms.
+- Week grids, SU timetable next to the model: classes per hour that need a room of a given size (by
+  quota) against the rooms that big. Red = more classes than rooms, so some must move.
+- Class list: the moved classes with SU time, model time and the rule their SU time breaks; or every
+  class, with a search box.
+
+### Big rooms (`bigrooms.html`)
+
+- The Large (81–150 seats) and Very large (151+) teaching rooms, biggest first; rooms with the same
+  seats share a card.
+- Each room lists the Fall sections whose quota needs it: above the next smaller room's seats, up to
+  this room's (FASS G062, 172 seats, gets quotas 131–172 because FENS L045 has 130). A quota bigger
+  than every room is listed under the biggest one.
+- Hours bar: weekly hours of the classes that need this size or bigger, against what the rooms this
+  size or bigger offer (53 h each: Mon–Fri 08:40–18:40 minus the Friday 12:40–14:30 break).
+- Quotas come from `data/quota.js`, written by the term project's `get_capacity.py` (SU's class search).
+
 Rules carried over from SU Planner: PROJ 302 isn't a separate class (it is PROJ 201); x95 courses are
 summer internships; a Spring course with no Spring schedule loaded uses the Fall times.
 
@@ -90,11 +112,13 @@ After changing CSS, JS or data, run `python tools/bump_version.py` before upload
 
 ## Files
 
-- `index.html`, `courses.html`, `rooms.html`, `changes.html`: the four views, one script and one
+- `index.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`, `bigrooms.html`: the six views, one script and one
   stylesheet each in `js/` and `css/`
 - `css/admin.css`: shared look (top bar, controls, tables, chips, heatmap cells)
 - `js/common.js`: shared helpers (time labels, room names, heatmap colours, tooltips)
 - `js/plan-core.js`: SU Planner's suggested 4-year plan as a standalone function
 - `js/shared.js`, `js/programs.js`, `js/times.js`: from SU Planner (requirement helpers, program list,
   class times and the clash-free timetable search)
-- `tools/`: data scripts, `serve.py` (local server without caching), `bump_version.py`
+- `data/quota.js`: section quotas (seats) from SU's class search, written by the term project
+- `data/model-result.js`: written by the term project's model, read by `model.html`
+- `tools/`: data scripts (`build_rooms.py --filter` re-applies the teaching-room filter), `serve.py` (local server without caching), `bump_version.py`

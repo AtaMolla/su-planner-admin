@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Big rooms</title>
+  <meta name="description" content="Sabancı University's Large and Very large rooms and the Fall classes whose quota needs each of them.">
+  <link rel="stylesheet" href="css/admin.css?v=202611122221">
+  <link rel="stylesheet" href="css/bigrooms.css?v=202611122221">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="index.html"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
+      <a href="courses.html"><span class="long">Course overview</span><span class="short">Courses</span></a>
+      <a href="rooms.html"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
+      <a href="changes.html"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
+      <a href="model.html"><span class="long">Timetable model</span><span class="short">Model</span></a>
+      <a href="bigrooms.html" aria-current="page"><span class="long">Big rooms</span><span class="short">Big</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Big rooms</h2>
+      <p>Large and Very large rooms, and the classes that need them. A class needs a room with at least as many seats
+        as its quota, so each room gets the classes that are too big for the next smaller room.</p>
+    </section>
+
+    <div id="tiles" class="tiles"></div>
+
+    <div class="controls">
+      <div id="kind" class="seg" role="group" aria-label="Section types"></div>
+    </div>
+
+    <div id="rooms"></div>
+
+    <p class="note" id="foot"></p>
+  </main>
+
+  <script src="data/courses.js?v=202611122221"></script>
+  <script src="data/requirements.js?v=202611122221"></script>
+  <script src="data/rooms.js?v=202611122221"></script>
+  <script src="data/quota.js?v=202611122221"></script>
+  <script src="js/programs.js?v=202611122221"></script>
+  <script src="js/shared.js?v=202611122221"></script>
+  <script src="js/common.js?v=202611122221"></script>
+  <script src="js/bigrooms.js?v=202611122221"></script>
+</body>
+</html>

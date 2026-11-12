@@ -132,6 +132,13 @@ window.SUAdmin = (() => {
     return groups.map((g) => (g.length > 1 ? `(${g.join(' or ')})` : g[0])).join(' and ');
   }
 
+  // On phones the tabs scroll sideways: show the current page's tab.
+  const nav = document.querySelector('.page-tabs');
+  const current = nav?.querySelector('[aria-current="page"]');
+  if (nav && current && nav.scrollWidth > nav.clientWidth) {
+    nav.scrollLeft = current.offsetLeft + current.offsetWidth - nav.clientWidth + 8;
+  }
+
   return {
     S, esc, DAYS, DAY_NAMES, ROWS, pad, rowStart, rowEnd, byCode, typeName, sectionName, PROGRAMS, programName, TERMS, entryLabel,
     SCHEDULES, seasonOf, meetingLabel, slotsLabel, roomOf, BUILDINGS, RAMP, heatStyle, rampLegend, tip, remember, save,

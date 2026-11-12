@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Timetable model</title>
+  <meta name="description" content="Results of the IE 312 class scheduling model: which Fall classes it keeps at SU's times and which it moves, and why.">
+  <link rel="stylesheet" href="css/admin.css?v=202611122221">
+  <link rel="stylesheet" href="css/rooms.css?v=202611122221">
+  <link rel="stylesheet" href="css/model.css?v=202611122221">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="index.html"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
+      <a href="courses.html"><span class="long">Course overview</span><span class="short">Courses</span></a>
+      <a href="rooms.html"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
+      <a href="changes.html"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
+      <a href="model.html" aria-current="page"><span class="long">Timetable model</span><span class="short">Model</span></a>
+      <a href="bigrooms.html"><span class="long">Big rooms</span><span class="short">Big</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Timetable model</h2>
+      <p>Results of our class scheduling model (integer program, solved with Gurobi). It keeps every class at its
+        SU time when it can, and moves a class only when SU's timetable breaks one of the rules below.</p>
+    </section>
+
+    <div id="tiles" class="tiles"></div>
+
+    <section class="card">
+      <div class="room-head">
+        <h3 class="card-title">Classes per hour vs rooms that fit them</h3>
+        <div id="size" class="seg" role="group" aria-label="Room size"></div>
+      </div>
+      <p class="muted small" id="grid-sub"></p>
+      <div class="grids">
+        <div><h4>SU timetable</h4><div class="heat-wrap"><table id="g-su" class="heat week"></table></div></div>
+        <div><h4>Model</h4><div class="heat-wrap"><table id="g-model" class="heat week"></table></div></div>
+      </div>
+      <div class="legend-row" id="grid-legend"></div>
+    </section>
+
+    <section class="card">
+      <div class="room-head">
+        <h3 class="card-title">Classes</h3>
+        <div class="controls tight">
+          <div id="show" class="seg" role="group" aria-label="Show"></div>
+          <input id="q" type="search" placeholder="Search a course, e.g. CS 303" aria-label="Search a course">
+        </div>
+      </div>
+      <p class="muted small" id="list-sub"></p>
+      <div class="table-wrap"><table id="list" class="data model-t"></table></div>
+    </section>
+
+    <section class="card">
+      <h3 class="card-title">Rules in the model</h3>
+      <ol id="rules" class="rules" start="0"></ol>
+    </section>
+
+    <p class="note" id="foot"></p>
+  </main>
+
+  <script src="data/courses.js?v=202611122221"></script>
+  <script src="data/requirements.js?v=202611122221"></script>
+  <script src="data/model-result.js?v=202611122221"></script>
+  <script src="js/programs.js?v=202611122221"></script>
+  <script src="js/shared.js?v=202611122221"></script>
+  <script src="js/common.js?v=202611122221"></script>
+  <script src="js/model.js?v=202611122221"></script>
+</body>
+</html>

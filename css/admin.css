@@ -166,6 +166,12 @@ details.fold[open] summary { margin-bottom: 4px; }
 
 .empty { padding: 26px; color: var(--muted); text-align: center; }
 
+/* ---------- Medium screens: five tabs need the short names ---------- */
+@media (max-width: 1060px) {
+  .page-tabs .long { display: none; }
+  .page-tabs .short { display: inline; }
+}
+
 /* ---------- Phones ---------- */
 @media (max-width: 760px) {
   main { padding: 14px 12px 40px; }
@@ -181,6 +187,9 @@ details.fold[open] summary { margin-bottom: 4px; }
   .controls input[type="search"] { width: 100%; }
   .controls label { flex-wrap: wrap; }
   .page-head h2 { font-size: 19px; }
+}
+@media (max-width: 420px) {
+  .page-tabs a { padding: 3px 5px 0; font-size: 13px; }
 }
 @media print {
   .topbar, .controls { display: none; }
