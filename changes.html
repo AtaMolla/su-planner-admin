@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Curriculum changes</title>
+  <meta name="description" content="What changed in each Sabancı University program's degree requirements between entry years 2020 and 2026.">
+  <link rel="stylesheet" href="css/admin.css?v=202611121525">
+  <link rel="stylesheet" href="css/changes.css?v=202611121525">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="index.html"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
+      <a href="courses.html"><span class="long">Course overview</span><span class="short">Courses</span></a>
+      <a href="rooms.html"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
+      <a href="changes.html" aria-current="page"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Curriculum changes by year</h2>
+      <p>What changed in each program's degree requirements from one entry year to the next (Fall 2020 to Fall 2026):
+        requirement groups added or removed, minimum credits changed, and courses added to or removed from a group.</p>
+    </section>
+
+    <h3>Changes per program and year</h3>
+    <p class="muted small">Number of changes from the year before: groups, minimums, totals, and courses added to or removed from required, core, area and university lists (free-elective and faculty-course lists are shown but not counted). Click a square to see them.</p>
+    <div id="matrix" class="table-wrap"></div>
+
+    <div class="controls compare">
+      <label>Program <select id="program"></select></label>
+      <label>From <select id="from"></select></label>
+      <label>to <select id="to"></select></label>
+    </div>
+
+    <h3 id="net-title">Overall</h3>
+    <div id="net"></div>
+
+    <h3>Year by year</h3>
+    <div id="steps"></div>
+
+    <p class="note">From SU's public degree pages (one per entry year). Groups are matched by their code on those
+      pages (e.g. BSCS_REQ). Free-elective and faculty-course lists hold hundreds of courses and change whenever the
+      catalog does, so they are folded.</p>
+  </main>
+
+  <script src="data/requirements.js?v=202611121525"></script>
+  <script src="js/programs.js?v=202611121525"></script>
+  <script src="js/shared.js?v=202611121525"></script>
+  <script src="js/common.js?v=202611121525"></script>
+  <script src="js/changes.js?v=202611121525"></script>
+</body>
+</html>

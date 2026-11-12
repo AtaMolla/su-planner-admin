@@ -1,0 +1,35 @@
+/* Room and time usage page */
+.card-title { margin: 0 0 2px; font-size: 15.5px; }
+.card .muted.small { margin: 0 0 8px; }
+.heat-wrap { overflow-x: auto; padding-bottom: 4px; }
+.legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.room-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.room-head select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+
+.heat.week td { min-width: 52px; height: 24px; }
+.heat.week th[scope="row"] { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* wide grids: 5 days × 13 hours */
+.heat.wide { border-spacing: 1px; }
+.heat.wide td { min-width: 11px; width: 11px; height: 18px; padding: 0; border-radius: 2px; }
+.heat.wide td.day-start, .heat.wide tr.hours th.day-start { border-left: 4px solid #fff; }
+.heat.wide tr.hours th { width: 11px; max-width: 11px; overflow: visible; }
+.heat.wide th.day-h { text-align: left; padding-left: 6px; border-left: 4px solid #fff; }
+.heat.wide tr.hours th { padding: 0; color: var(--faint); font-size: 10px; font-weight: 500; text-align: left; }
+.heat.wide .rlabel {
+  position: sticky; left: 0; z-index: 1; min-width: 104px; padding-right: 8px;
+  background: #fff; color: var(--ink); font-weight: 600; text-align: left;
+}
+.heat.wide .rlabel button { padding: 0; border: 0; background: none; color: var(--brand-hi); font-weight: 700; cursor: pointer; text-decoration: underline dotted; }
+.heat.wide tr.picked .rlabel button { color: var(--ink); text-decoration: none; }
+.heat.wide tr.picked .rlabel { box-shadow: inset 3px 0 0 var(--brand); padding-left: 6px; }
+.heat.wide td.tot, .heat.wide th.tot-h {
+  min-width: 44px; width: auto; padding: 0 0 0 8px; background: none; color: var(--muted);
+  font-size: 12px; text-align: right; outline: none;
+}
+.rooms-t .rlabel { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .heat.week td { min-width: 40px; }
+  .heat.wide .rlabel { min-width: 86px; }
+}

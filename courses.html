@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Course overview</title>
+  <meta name="description" content="Every Sabancı University course: which programs list it, prerequisites, credits and sections.">
+  <link rel="stylesheet" href="css/admin.css?v=202611121525">
+  <link rel="stylesheet" href="css/courses.css?v=202611121525">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="index.html"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
+      <a href="courses.html" aria-current="page"><span class="long">Course overview</span><span class="short">Courses</span></a>
+      <a href="rooms.html"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
+      <a href="changes.html"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Course overview</h2>
+      <p>Every undergraduate course in the degree requirements or on this year's class schedule: which of the 12
+        programs list it and as what, its prerequisites, credits, and how many sections it has in Fall and Spring.
+        Click a course for its sections.</p>
+    </section>
+
+    <div class="controls">
+      <input id="q" type="search" placeholder="Code or name, e.g. CS 2 or algorithms" aria-label="Search courses">
+      <label>Entry year <select id="entry"></select></label>
+      <label>Program <select id="program"></select></label>
+      <label>Listed as <select id="role">
+        <option value="">anything</option>
+        <option value="required">Required</option>
+        <option value="core">Core elective</option>
+        <option value="area">Area elective</option>
+        <option value="university">University course</option>
+        <option value="free">Free elective only</option>
+        <option value="none">Not in any program</option>
+      </select></label>
+      <label>Runs in <select id="offered">
+        <option value="">any term</option>
+        <option value="fall">Fall</option>
+        <option value="spring">Spring</option>
+        <option value="both">Fall and Spring</option>
+        <option value="fall-only">Fall only</option>
+        <option value="spring-only">Spring only</option>
+        <option value="neither">Neither this year</option>
+      </select></label>
+      <label>Level <select id="level">
+        <option value="">all</option>
+        <option value="0">0xx</option><option value="1">1xx</option><option value="2">2xx</option>
+        <option value="3">3xx</option><option value="4">4xx</option>
+      </select></label>
+      <span id="count" class="count" aria-live="polite"></span>
+    </div>
+
+    <div class="legend small muted">
+      <span class="chip required">CS</span> required ·
+      <span class="chip requirement">ECON</span> required, choose from a list ·
+      <span class="chip core">CS</span> core elective ·
+      <span class="chip area">CS</span> area elective ·
+      <span class="chip university">CS</span> university course ·
+      <span class="chip free">CS</span> free elective
+    </div>
+
+    <div id="list" class="table-wrap"></div>
+    <p class="note">Programs and roles follow the degree requirements for the chosen entry year. A course is shown
+      under the first group that lists it (required before core, core before area, …); free electives are counted,
+      not listed. Section counts are for the main part (usually the lecture); recitations and labs are in the details.
+      Fall = Fall 2026-27, Spring = Spring 2026-27.</p>
+  </main>
+
+  <script src="data/courses.js?v=202611121525"></script>
+  <script src="data/schedule-202602.js?v=202611121525"></script>
+  <script src="data/requirements.js?v=202611121525"></script>
+  <script src="js/programs.js?v=202611121525"></script>
+  <script src="js/shared.js?v=202611121525"></script>
+  <script src="js/times.js?v=202611121525"></script>
+  <script src="js/common.js?v=202611121525"></script>
+  <script src="js/courses.js?v=202611121525"></script>
+</body>
+</html>

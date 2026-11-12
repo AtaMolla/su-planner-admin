@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Room and time usage</title>
+  <meta name="description" content="Heatmaps of how busy each Sabancı University building, room and hour of the week is.">
+  <link rel="stylesheet" href="css/admin.css?v=202611121525">
+  <link rel="stylesheet" href="css/rooms.css?v=202611121525">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="index.html"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
+      <a href="courses.html"><span class="long">Course overview</span><span class="short">Courses</span></a>
+      <a href="rooms.html" aria-current="page"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
+      <a href="changes.html"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Room and time usage</h2>
+      <p>How busy each building, room and hour of the week is, from the meeting places and times in the class
+        schedule. A room counts as used in an hour when at least one class meets there. Exams, events and one-off
+        bookings are not in the schedule.</p>
+    </section>
+
+    <div class="controls">
+      <div id="term" class="seg" role="group" aria-label="Semester"></div>
+      <label>Building <select id="building"></select></label>
+      <label>Rooms <select id="kind">
+        <option value="all">every room in the schedule</option>
+        <option value="teach">classrooms &amp; halls</option>
+        <option value="lab">labs</option>
+      </select></label>
+    </div>
+
+    <div id="tiles" class="tiles"></div>
+
+    <section class="card">
+      <h3 class="card-title">Rooms in use, by hour of the week</h3>
+      <p class="muted small" id="week-sub"></p>
+      <div class="heat-wrap"><table id="week" class="heat week"></table></div>
+      <div id="week-legend" class="legend-row"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="card-title">Buildings, by hour of the week</h3>
+      <p class="muted small">Share of each building's rooms in use. Hover a square for the count.</p>
+      <div class="heat-wrap"><table id="bld" class="heat wide"></table></div>
+      <div id="bld-legend" class="legend-row"></div>
+    </section>
+
+    <section class="card">
+      <div class="room-head">
+        <h3 class="card-title">Rooms, by hour of the week</h3>
+        <label class="muted small">Sort <select id="sort">
+          <option value="busy">busiest first</option>
+          <option value="idle">least used first</option>
+          <option value="name">by name</option>
+          <option value="seats">by seats</option>
+        </select></label>
+      </div>
+      <p class="muted small">Each row is a room: a filled square is an hour with a class (darker = more sections at once, e.g. shared rooms). Hover for the class.</p>
+      <div class="heat-wrap"><table id="rooms" class="heat wide rooms-t"></table></div>
+    </section>
+
+    <p class="note">Week = Monday to Friday, 08:40 to 21:30 (13 one-hour rows). "FMAN" in the Fall schedule is the
+      Business School building (SBS). Room types and seats come from SU's room list (FASS, FENS, SBS, UC only). Sections
+      with no fixed time or no room are left out.</p>
+  </main>
+
+  <script src="data/courses.js?v=202611121525"></script>
+  <script src="data/schedule-202602.js?v=202611121525"></script>
+  <script src="data/requirements.js?v=202611121525"></script>
+  <script src="data/rooms.js?v=202611121525"></script>
+  <script src="js/programs.js?v=202611121525"></script>
+  <script src="js/shared.js?v=202611121525"></script>
+  <script src="js/common.js?v=202611121525"></script>
+  <script src="js/rooms.js?v=202611121525"></script>
+</body>
+</html>
