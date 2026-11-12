@@ -78,7 +78,7 @@
       <div class="tile"><b>${hours}</b><span>room-hours of class a week</span></div>
       <div class="tile"><b>${per[peak]}</b><span>rooms at the peak, ${esc(slotLabel(peak).replace(/day /, ' ').replace(/–.*/, ''))}</span></div>
       <div class="tile"><b>${pct(avg)}</b><span>average use, 08:40–17:30</span></div>
-      <div class="tile"><b>${idle}</b><span>rooms with no class at all</span></div>`;
+      <div class="tile"><b>${idle}</b><span>room${idle === 1 ? '' : 's'} with no class at all</span></div>`;
     return per;
   }
 
