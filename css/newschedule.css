@@ -54,6 +54,11 @@
 .tg-k.k-core { background: #e2ebf8; color: var(--brand); }
 .tg-k.k-area { background: #e4f3e8; color: var(--ok); }
 #cats button[aria-pressed="true"] .tg-k { box-shadow: 0 0 0 1px #fff; }
+#cats.off { opacity: 0.45; }
+/* place in the program's suggested plan: Y2 Fall, Y2 Spring … */
+.tg-p { padding: 0 4px; border-radius: 3px; font-size: 9.5px; font-weight: 800; line-height: 15px; white-space: nowrap; }
+.tg-p.fall { background: #18212b; color: #fff; }
+.tg-p.spring { background: #eef0f3; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); }
 
 @media (max-width: 760px) {
   .controls input[type="search"] { width: 100%; }

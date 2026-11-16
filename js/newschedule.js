@@ -97,8 +97,10 @@
   const KINDS = [['req', 'Required'], ['core', 'Core'], ['area', 'Area']];
   const KIND_OF = { required: 'req', requirement: 'req', core: 'core', area: 'area' };
   let progKind = new Map();                                       // course code -> 'req' | 'core' | 'area'
+  let planSem = new Map();                                        // course code -> semester 0..7 of the suggested plan
   function loadProgram() {
     progKind = new Map();
+    planSem = new Map();
     if (state.prog === 'all') return;
     const terms = A.S.termsFor(state.prog).map((t) => t.term);
     if (!terms.includes(state.entry)) state.entry = terms[0];
@@ -111,8 +113,21 @@
         if (!old || KINDS.findIndex(([v]) => v === k) < KINDS.findIndex(([v]) => v === old)) progKind.set(key, k);
       }
     }
+    // the suggested 8-semester plan, as SU Planner builds it (js/plan-core.js), for this curriculum
+    if (window.SUPlan) {
+      SUPlan.suggest(state.prog, state.entry).slice(0, 8).forEach((sem, i) => {
+        for (const code of sem) if (!SUPlan.isSlot(code)) planSem.set(A.S.canonicalCode(code), i);
+      });
+    }
   }
   loadProgram();
+  // semester of a class in the suggested plan (its earliest course code there), or undefined
+  const planOf = (c) => {
+    const s = c.codes.map((code) => planSem.get(A.S.canonicalCode(code))).filter((v) => v !== undefined);
+    return s.length ? Math.min(...s) : undefined;
+  };
+  const planLabel = (i) => `Y${Math.floor(i / 2) + 1} ${i % 2 ? 'Spring' : 'Fall'}`;
+  state.season = A.remember('ns-season', 'any');                  // 'any' | 'fall' | 'spring': the plan's semesters
   const kindOf = (c) => {
     let best = null;
     for (const code of c.codes) {
@@ -121,11 +136,23 @@
     }
     return best;
   };
-  const shown = (c) => !state.hide.has(c.year) && (state.prog === 'all' || state.cats.has(kindOf(c)));
+  // With a program: "Plan: Fall / Spring" shows the suggested plan's courses of that season (whatever
+  // their category); otherwise the Required / Core / Area toggles decide.
+  const progShown = (c) => {
+    if (state.prog === 'all') return true;
+    if (state.season !== 'any') {
+      const p = planOf(c);
+      return p !== undefined && (p % 2 ? 'spring' : 'fall') === state.season;
+    }
+    return state.cats.has(kindOf(c));
+  };
+  const shown = (c) => !state.hide.has(c.year) && progShown(c);
   const kindTag = (c) => {
     if (state.prog === 'all') return '';
     const k = kindOf(c);
-    return k ? `<span class="tg-k k-${k}">${KINDS.find(([v]) => v === k)[1]}</span>` : '';
+    const p = planOf(c);
+    return (k ? `<span class="tg-k k-${k}">${KINDS.find(([v]) => v === k)[1]}</span>` : '')
+      + (p !== undefined ? `<span class="tg-p ${p % 2 ? 'spring' : 'fall'}" title="Suggested plan: ${SUPlan.semesterTitle(p)}">${planLabel(p)}</span>` : '');
   };
   if (state.subj !== 'all' && !subjects.includes(state.subj)) state.subj = 'all';
   const normQ = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
@@ -243,7 +270,7 @@
   }
 
   function renderWeek() {
-    const shown = rooms.filter((rm) => {
+    const visibleRooms = rooms.filter((rm) => {
       if (state.bld !== 'all' && rm.building !== state.bld) return false;
       const all = [...[...rm.here.values()].flat(), ...[...rm.gone.values()].flat()].filter(shown);
       if ((state.prog !== 'all' || state.hide.size) && !all.length) return false;
@@ -251,8 +278,8 @@
       if (state.q && !all.some(matches)) return false;
       return true;
     });
-    if (!shown.length) return '<p class="empty">No rooms match.</p>';
-    return shown.map((rm) => {
+    if (!visibleRooms.length) return '<p class="empty">No rooms match.</p>';
+    return visibleRooms.map((rm) => {
       const hours = [...rm.here.values()].reduce((s, l) => s + l.length, 0);
       const have = 5 * GRID_ROWS - blocked.size;
       const ids = new Set([...rm.here.values()].flat());
@@ -318,7 +345,13 @@
         const n = [...progKind.values()].filter((v) => v === k).length;
         return `<button type="button" data-cat="${k}" aria-pressed="${state.cats.has(k)}"><span class="tg-k k-${k}">${label}</span> ${n}</button>`;
       }).join('');
+      const nPlan = (odd) => [...planSem.values()].filter((i) => i % 2 === odd).length;
+      $('#season').innerHTML = [['any', 'Any'], ['fall', `Plan: Fall (${nPlan(0)})`], ['spring', `Plan: Spring (${nPlan(1)})`]]
+        .map(([v, label]) => `<button type="button" data-season="${v}" aria-pressed="${state.season === v}">${label}</button>`).join('');
+      $('#cats').classList.toggle('off', state.season !== 'any');
     }
+    $('#season').hidden = !progOn;
+    A.save('ns-season', state.season);
     const seg = (id, key, opts) => {
       $(id).innerHTML = opts.map(([v, label]) => `<button type="button" data-v="${v}" aria-pressed="${state[key] === v}">${label}</button>`).join('');
     };
@@ -405,6 +438,10 @@
   });
   $('#prog').addEventListener('change', (e) => { state.prog = e.target.value; loadProgram(); render(); });
   $('#entry').addEventListener('change', (e) => { state.entry = e.target.value; loadProgram(); render(); });
+  $('#season').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-season]');
+    if (b) { state.season = b.dataset.season; render(); }
+  });
   $('#cats').addEventListener('click', (e) => {
     const b = e.target.closest('[data-cat]');
     if (!b) return;

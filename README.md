@@ -117,6 +117,10 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
 Both schedule tabs share these filters (kept when you switch tabs): year buttons (click to hide a course
 year), a program picker with its curriculum entry year, and Required / Core / Area toggles that show only
 that program's courses of those types (tagged on each course).
+Each program course also gets its place in the program's suggested plan (Y2 Fall, Y2 Spring …), the
+same 8-semester plan SU Planner suggests (`js/plan-core.js`), and **Plan: Fall / Plan: Spring** shows
+only the suggested plan's Fall or Spring courses (for IE: MATH 203 and MATH 212 in Y2 Fall,
+MATH 306 in Y2 Spring).
 
 ### New schedule (`newschedule.html`)
 
