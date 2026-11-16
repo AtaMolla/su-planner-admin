@@ -30,3 +30,32 @@
   .br-card .c-name, .br-card .c-time { display: none; }
 }
 .tile b.bad-n { color: var(--bad); }
+
+/* Week grid: Mon–Fri × 08:40–18:40 */
+.wk { display: grid; grid-template-columns: 52px repeat(5, minmax(110px, 1fr)); gap: 2px; padding: 10px 16px 14px; overflow-x: auto; font-size: 11.5px; }
+.wk-h { padding: 2px 4px; color: var(--muted); font-weight: 700; text-align: center; }
+.wk-t { padding: 3px 4px 0 0; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.wk-c { position: relative; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px; min-height: 26px; padding: 3px; border-radius: 4px; background: var(--s0); }
+.wk-c:hover { outline: 2px solid var(--ink); outline-offset: -1px; }
+.wk-c.some { background: #e2ebf8; }
+.wk-c.full { background: #fdf1d8; }
+.wk-c.over { background: var(--bad-bg); box-shadow: inset 0 0 0 1px var(--bad); }
+.wk-c.brk { background: repeating-linear-gradient(45deg, #eef0f3 0 6px, #e3e6ea 6px 12px); }
+.wk-brk { color: var(--faint); font-style: italic; margin: auto; }
+.wk-chip { padding: 1px 5px; border-radius: 3px; background: var(--brand); color: #fff; font-family: var(--mono); font-size: 10.5px; white-space: nowrap; }
+.wk-over { margin-left: auto; color: var(--bad); font-weight: 800; }
+@media (max-width: 760px) { .wk { padding: 8px 8px 12px; grid-template-columns: 44px repeat(5, minmax(96px, 1fr)); } }
+
+/* Course years: colours and show/hide buttons */
+.wk-chip.y1, .yr-dot.y1 { background: #2f7d45; }
+.wk-chip.y2, .yr-dot.y2 { background: #1b5cb2; }
+.wk-chip.y3, .yr-dot.y3 { background: #c46a12; }
+.wk-chip.y4, .yr-dot.y4 { background: #7a3fa8; }
+.wk-chip.yg, .yr-dot.yg { background: #5b6472; }
+.wk-chip.oq { box-shadow: 0 0 0 2px var(--bad); }
+.yr-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
+.years { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.yr { padding: 4px 10px; border: 2px solid transparent; border-radius: 14px; color: #fff; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.yr.y1 { background: #2f7d45; } .yr.y2 { background: #1b5cb2; } .yr.y3 { background: #c46a12; } .yr.y4 { background: #7a3fa8; } .yr.yg { background: #5b6472; }
+.yr[aria-pressed="false"] { background: var(--card); color: var(--faint); border-color: var(--line); text-decoration: line-through; }
+.yr:focus-visible { outline: 2px solid var(--brand-hi); outline-offset: 1px; }
