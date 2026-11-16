@@ -33,7 +33,7 @@
   const isBig = new Map(bigRooms.map((r) => [r.id, r]));
 
   // ---------- Sections meeting in a big room now: one entry per (section, room) ----------
-  const uses = []; // { room, code, name, type, group, crn, quota, year, slots[] }
+  const raw = []; // { room, code, name, type, group, crn, quota, year, teacher, slots[] }
   for (const c of data?.courses || []) {
     for (const cl of c.classes) {
       for (const s of cl.sections) {
@@ -46,14 +46,31 @@
           for (let k = 0; k < m.duration; k++) byRoom.get(room.id).add(m.day * ROWS + m.start + k);
         }
         for (const [room, slots] of byRoom) {
-          uses.push({
+          raw.push({
             room, code: c.code, name: A.courseName(c.code) || c.name, type: cl.type, group: s.group, crn: s.crn,
-            quota: QUOTA[s.crn] || null, year: yearOf(c.code), slots: [...slots].sort((a, b) => a - b),
+            quota: QUOTA[s.crn] || null, year: yearOf(c.code), teacher: s.instructors, slots: [...slots].sort((a, b) => a - b),
           });
         }
       }
     }
   }
+
+  // One class under several codes (MATH 409 + MATH 555, EE 407 + EE 533): same room, same hours and same
+  // teacher. Shown as one class; its quota is the sum (all of them sit in the room), its year the lowest.
+  const merged = new Map();
+  for (const u of raw) {
+    const k = `${u.room}|${u.teacher}|${u.slots.join(',')}`;
+    const m = merged.get(k);
+    if (!m) { merged.set(k, { ...u, parts: [u] }); continue; }
+    m.parts.push(u);
+    m.quota = m.parts.every((x) => x.quota) ? m.parts.reduce((t, x) => t + x.quota, 0) : null;
+    if (m.year === 'g' || (u.year !== 'g' && u.year < m.year)) m.year = u.year;
+    if (u.type === '') m.type = '';
+  }
+  const uses = [...merged.values()].map((m) => {
+    m.parts.sort((a, b) => A.byCode(a.code, b.code));
+    return { ...m, code: m.parts[0].code, group: m.parts[0].group, type: m.parts[0].type };
+  });
 
   const state = {
     kind: A.remember('bigrooms-kind', 'all'),
@@ -61,7 +78,9 @@
     hide: new Set(A.remember('bigrooms-hide-years', [])),
   };
 
-  const labelOf = (s) => `${s.code}${s.type ? ` ${A.typeName(s.type)}` : ''}${s.group && s.group !== '0' ? ` ${s.group}` : ''}`;
+  const oneLabel = (s) => `${s.code}${s.type ? ` ${A.typeName(s.type)}` : ''}${s.group && s.group !== '0' ? ` ${s.group}` : ''}`;
+  const labelOf = (s) => (s.parts ? s.parts.map(oneLabel).join(' / ') : oneLabel(s));
+  const quotaNote = (s) => (s.parts.length > 1 ? ` (${s.parts.map((x) => `${x.code} ${x.quota ?? '?'}`).join(' + ')})` : '');
   const isBreak = (d, r) => d === 4 && (r === 4 || r === 5); // Friday 12:40–14:30
   const overQuota = (s, room) => s.quota && s.quota > room.seats;
 
@@ -75,7 +94,7 @@
         const here = own.filter((s) => s.slots.includes(x));
         const cls = here.length > 1 ? 'over' : here.length ? 'some' : isBreak(d, r) ? 'brk' : '';
         const tipTxt = `<b>${room.id} · ${A.DAY_NAMES[d]} ${A.rowStart(r)}–${A.rowEnd(r)}</b><br>`
-          + (here.length ? here.map((s) => `${esc(labelOf(s))} · quota ${s.quota ?? '?'} · ${esc(s.name)}`).join('<br>') : 'Free')
+          + (here.length ? here.map((s) => `${esc(labelOf(s))} · quota ${s.quota ?? '?'}${esc(quotaNote(s))} · ${esc(s.name)}`).join('<br>') : 'Free')
           + (here.length > 1 ? '<br>More than one class here at this hour' : '');
         html += `<div class="wk-c ${cls}" data-tip="${esc(tipTxt)}">${isBreak(d, r) && !here.length ? '<span class="wk-brk">break</span>' : ''}`
           + here.map((s) => `<span class="wk-chip y${s.year}${overQuota(s, room) ? ' oq' : ''}">${esc(labelOf(s))}</span>`).join('')
@@ -101,7 +120,7 @@
     const have = bigRooms.length * HOURS_PER_ROOM;
     $('#tiles').innerHTML = `
       <div class="tile"><b>${bigRooms.length}</b><span>Large and Very large rooms (${LARGE}+ seats)</span></div>
-      <div class="tile"><b>${new Set(list.map((s) => s.crn)).size}</b><span>${state.kind === 'all' ? 'sections' : 'lectures'} held in them now</span></div>
+      <div class="tile"><b>${new Set(list.map((s) => s.parts.map((x) => x.crn).join())).size}</b><span>${state.kind === 'all' ? 'classes' : 'lectures'} held in them now</span></div>
       <div class="tile"><b>${fmt(used)} h <small class="muted">of ${fmt(have)} h</small></b><span>weekly hours in use, of what the big rooms offer</span></div>`;
 
     $('#rooms').innerHTML = bigRooms.map((room) => {
@@ -111,14 +130,14 @@
       const rows = own.map((s) => `<tr>
           <td class="nowrap"><span class="yr-dot y${s.year}"></span><b>${esc(labelOf(s))}</b></td>
           <td class="c-name cname">${esc(s.name)}</td>
-          <td class="num"><b>${s.quota ?? '–'}</b>${overQuota(s, room) ? ' <span class="badge over-seats">above seats</span>' : ''}</td>
+          <td class="num"><b title="${esc(quotaNote(s).trim())}">${s.quota ?? '–'}</b>${overQuota(s, room) ? ' <span class="badge over-seats">above seats</span>' : ''}</td>
           <td class="num">${s.slots.length} h</td>
           <td class="c-time small">${esc(A.slotsLabel(s.slots))}</td></tr>`).join('');
       return `<section class="card br-card">
         <div class="br-head">
           <h3 class="br-name">${esc(room.id)} <small>${room.seats} seats · ${esc(room.type)}</small></h3>
           ${cat}
-          <span class="br-count">${own.length} ${state.kind === 'all' ? 'section' : 'lecture'}${own.length === 1 ? '' : 's'}</span>
+          <span class="br-count">${own.length} ${state.kind === 'all' ? 'class' : 'lecture'}${own.length === 1 ? '' : state.kind === 'all' ? 'es' : 's'}</span>
         </div>
         <div class="br-hours">
           <span>Hours in use a week:</span>
@@ -136,7 +155,8 @@
       there (– = not known). Rooms are the teaching rooms in SU's room list with ${LARGE}+ seats.
       Large = ${LARGE}–${VERY_LARGE - 1} seats, Very large = ${VERY_LARGE}+. A room offers ${HOURS_PER_ROOM} hours a week
       (Mon–Fri 08:40–19:30, minus the Friday 12:40–14:30 break). Chip colour = course year (from the course number;
-      500+ = graduate). Dashed outline = quota above the room's seats (SU already does this, so it is allowed); red cell = more than one class at that hour.`;
+      500+ = graduate). Sections under different codes that meet in the same room at the same hours with the
+      same teacher (like MATH 409 and MATH 555) are one class: shown as one chip, quota added up, coloured by the lower year. Dashed outline = quota above the room's seats (SU already does this, so it is allowed); red cell = more than one class at that hour.`;
   }
 
   $('#kind').addEventListener('click', (e) => {
