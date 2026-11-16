@@ -199,13 +199,16 @@
   $('#tiles').innerHTML = `
     <div class="tile"><b>${fmt(placed.length)}</b><span>classes with a campus room (${R.rooms.length} rooms, ${R.labs} of them labs)</span></div>
     <div class="tile"><b>${fmt(kept)} <small class="muted">of ${fmt(totalHours)} h</small></b><span>class hours kept at SU's time</span></div>
+    <div class="tile"><b>${fmt(placed.reduce((s, c) => s + c.slots.filter((x) => x % ROWS === 0 || x % ROWS === GRID_ROWS - 1).length, 0))} h</b><span>class hours at 08:40 or 18:40 (SU: ${fmt(placed.reduce((s, c) => s + c.now.filter((x) => x % ROWS === 0 || x % ROWS === GRID_ROWS - 1).length, 0))} h)</span></div>
     <div class="tile"><b>${classes.filter((c) => c.newTime).length}</b><span>classes at a new time</span></div>
     <div class="tile"><b>${classes.filter((c) => c.newRoom).length}</b><span>classes in a room they don't use at SU</span></div>
     <div class="tile"><b>${placed.filter((c) => c.oneRoom).length}</b><span>classes in one room all week</span></div>
     ${clash ? `<div class="tile"><b class="${clash[1] < clash[0] ? 'good' : ''}">${clash[0]}<span class="arrow">→</span>${clash[1]}</b><span>student clash hours (SU → model)</span></div>` : ''}`;
 
   const s2 = R.stage2;
-  $('#foot').innerHTML = `Model run ${esc(R.run)}, ${esc(R.termName)}. Stage 1 (times): ${esc(R.status)} in ${R.seconds} s.
+  $('#foot').innerHTML = `Model run ${esc(R.run)}, ${esc(R.termName)}. Stage 1 (times): ${esc(R.status)} in ${R.seconds} s;
+    goal = −10 × demand for every class hour at 08:40 and 18:40 (demand ${R.demand?.on ? 'from each major\'s 3rd-year required courses, 1 for the rest' : '= 1'}),
+    SU's own times are not rewarded, first-year courses are locked to them.
     ${s2 ? `Stage 2 (rooms): ${esc(s2.status)} in ${s2.seconds} s, ${fmt(s2.variables)} variables.` : ''}
     Rooms are SU's teaching rooms (no stands, lobbies or rooms with ${R.settings.minSeats - 1} seats or fewer); lab classes
     use labs only, the other classes the other rooms, and every class gets a room with at least its quota in seats

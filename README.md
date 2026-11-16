@@ -87,6 +87,9 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
 - Results of the IE 312 class scheduling model (integer program in Gurobi, `class_scheduling.py` in
   the term project folder `ie312-class-scheduling`, next to this repo). Running it rewrites
   `data/model-result.js`.
+- Goal: −10 × demand for every class hour at 08:40 and 18:40 (demand = average quota of each major's
+  3rd-year required courses, 1 for the rest). SU's own times are not rewarded. First-year courses
+  (101/102 and the first-year University Courses) are locked to SU's times.
 - Tiles: class hours kept at SU's time, classes moved, locked first-year classes, teaching rooms.
 - Week grids, SU timetable next to the model: classes per hour that need a room of a given size (by
   quota) against the rooms that big. Red = more classes than rooms, so some must move.

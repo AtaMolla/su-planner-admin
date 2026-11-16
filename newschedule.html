@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SU Planner Admin – New schedule</title>
   <meta name="description" content="The Fall timetable our class scheduling model builds: every class's time and room, and what changed from SU's timetable.">
-  <link rel="stylesheet" href="css/admin.css?v=202611161656">
-  <link rel="stylesheet" href="css/bigrooms.css?v=202611161656">
-  <link rel="stylesheet" href="css/newschedule.css?v=202611161656">
+  <link rel="stylesheet" href="css/admin.css?v=202611161728">
+  <link rel="stylesheet" href="css/bigrooms.css?v=202611161728">
+  <link rel="stylesheet" href="css/newschedule.css?v=202611161728">
 </head>
 <body>
   <header class="topbar">
@@ -24,7 +24,7 @@
     <section class="page-head">
       <h2>New schedule</h2>
       <p>The Fall timetable our model builds. Stage 1 picks every class's hours, stage 2 gives every hour a room.
-        Classes keep SU's time and room unless a rule forces a change.</p>
+        The model keeps classes away from 08:40 and 18:40 (weighted by demand). First-year courses keep SU's times.</p>
     </section>
 
     <div id="tiles" class="tiles"></div>
@@ -42,12 +42,12 @@
     <p class="note" id="foot"></p>
   </main>
 
-  <script src="data/courses.js?v=202611161656"></script>
-  <script src="data/requirements.js?v=202611161656"></script>
-  <script src="data/model-result.js?v=202611161656"></script>
-  <script src="js/programs.js?v=202611161656"></script>
-  <script src="js/shared.js?v=202611161656"></script>
-  <script src="js/common.js?v=202611161656"></script>
-  <script src="js/newschedule.js?v=202611161656"></script>
+  <script src="data/courses.js?v=202611161728"></script>
+  <script src="data/requirements.js?v=202611161728"></script>
+  <script src="data/model-result.js?v=202611161728"></script>
+  <script src="js/programs.js?v=202611161728"></script>
+  <script src="js/shared.js?v=202611161728"></script>
+  <script src="js/common.js?v=202611161728"></script>
+  <script src="js/newschedule.js?v=202611161728"></script>
 </body>
 </html>
