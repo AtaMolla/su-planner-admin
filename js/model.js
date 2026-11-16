@@ -157,7 +157,7 @@
   // ---------- Rules ----------
   const S = R.settings;
   const rules = [
-    [`First-year courses stay at this term's SU times: every course numbered 101 or 102 and the first-year University Courses (${S.firstYear.join(', ')}).`, true],
+    [`First-year courses keep this term's SU times and rooms: every course numbered 101 or 102 and the first-year University Courses (${S.firstYear.join(', ')}).`, true],
     ['Every class gets all its weekly hours.', true],
     ['An instructor teaches one lecture at a time (instructors don\'t attend labs or recitations).', true],
     [`Student groups (a course's lecture with its own recitations and labs; each program's same-year required courses) shouldn't overlap: each clash hour costs ${S.groupPenalty ?? '?'} in the goal.`, S.useGroups],
