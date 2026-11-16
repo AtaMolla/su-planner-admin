@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SU Planner Admin – Current schedule</title>
+  <meta name="description" content="SU's Fall timetable as it is now, room by room, to compare with the model's new schedule.">
+  <link rel="stylesheet" href="css/admin.css?v=202611161831">
+  <link rel="stylesheet" href="css/bigrooms.css?v=202611161831">
+  <link rel="stylesheet" href="css/newschedule.css?v=202611161831">
+</head>
+<body data-mode="current">
+  <header class="topbar">
+    <h1 class="brand"><a href="bigrooms.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
+    <nav class="page-tabs" aria-label="Pages">
+      <a href="bigrooms.html"><span class="long">Big rooms</span><span class="short">Big rooms</span></a>
+      <a href="currentschedule.html" aria-current="page"><span class="long">Current schedule</span><span class="short">Current</span></a>
+      <a href="newschedule.html"><span class="long">New schedule</span><span class="short">New</span></a>
+      <a href="others.html"><span class="long">Others</span><span class="short">Others</span></a>
+    </nav>
+    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
+  </header>
+
+  <main>
+    <section class="page-head">
+      <h2>Current schedule</h2>
+      <p>SU's Fall timetable as it is now, room by room. Same layout as the New schedule tab, so you can switch
+        between the two tabs and compare a room.</p>
+    </section>
+
+    <div id="tiles" class="tiles"></div>
+
+    <div class="controls">
+      <div id="view" class="seg" role="group" aria-label="View" hidden></div>
+      <div id="only" class="seg" role="group" aria-label="Which rooms"></div>
+      <select id="bld" aria-label="Building"></select>
+      <input id="q" type="search" placeholder="Find a course, e.g. CS 303" aria-label="Find a course">
+    </div>
+    <div class="legend-row ns-legend" id="legend"></div>
+
+    <div id="out"></div>
+
+    <p class="note" id="foot"></p>
+  </main>
+
+  <script src="data/courses.js?v=202611161831"></script>
+  <script src="data/requirements.js?v=202611161831"></script>
+  <script src="data/model-result.js?v=202611161831"></script>
+  <script src="js/programs.js?v=202611161831"></script>
+  <script src="js/shared.js?v=202611161831"></script>
+  <script src="js/common.js?v=202611161831"></script>
+  <script src="js/newschedule.js?v=202611161831"></script>
+</body>
+</html>

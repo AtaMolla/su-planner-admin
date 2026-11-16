@@ -107,6 +107,12 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
   size or bigger offer (53 h each: Mon–Fri 08:40–18:40 minus the Friday 12:40–14:30 break).
 - Quotas come from `data/quota.js`, written by the term project's `get_capacity.py` (SU's class search).
 
+### Current schedule (`currentschedule.html`)
+
+- SU's own Fall timetable, room by room, drawn by the same script as New schedule (`js/newschedule.js`,
+  `<body data-mode="current">`), so the two tabs can be compared room by room. The building, "with
+  changes" and search choices carry over between the two tabs. Hovering a class shows where the model puts it.
+
 ### New schedule (`newschedule.html`)
 
 - The Fall timetable the term project's model builds. Stage 1 picks each class's hours, and stage 2
@@ -129,7 +135,7 @@ After changing CSS, JS or data, run `python tools/bump_version.py` before upload
 
 ## Files
 
-- `bigrooms.html`, `newschedule.html` and, under `others.html`, `clashes.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`: the views, one script and one
+- `bigrooms.html`, `currentschedule.html`, `newschedule.html` and, under `others.html`, `clashes.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`: the views, one script and one
   stylesheet each in `js/` and `css/`
 - `css/admin.css`: shared look (top bar, controls, tables, chips, heatmap cells)
 - `js/common.js`: shared helpers (time labels, room names, heatmap colours, tooltips)

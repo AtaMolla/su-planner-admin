@@ -10,6 +10,8 @@
   const fmt = (n) => n.toLocaleString('en');
   const R = window.MODEL_RESULT;
   const GRID_ROWS = 11; // the model plans 08:40 … 18:40
+  // Same page, two tabs: "current" = SU's timetable this term, otherwise the model's new schedule
+  const CURRENT = document.body.dataset.mode === 'current';
 
   if (!R || !R.rooms || !R.classes?.length || R.classes[0].length < 9) {
     $('main').insertAdjacentHTML('beforeend', '<p class="empty">No room results yet. Run class_scheduling.py (stage 2) in the term project folder.</p>');
@@ -52,18 +54,27 @@
   const room = new Map(rooms.map((r) => [r.id, r]));
   const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
   for (const c of placed) {
+    if (CURRENT) {
+      // SU's timetable as it is this term: each class in its SU room at its SU hours
+      for (const [x, r] of c.was) if (room.has(r)) push(room.get(r).here, x, c);
+      continue;
+    }
     for (const [x, r] of c.at) if (room.has(r)) push(room.get(r).here, x, c);
     // SU had it in this room at this hour, the model doesn't: a faded "moved away" chip
     for (const [x, r] of c.was) if (room.has(r) && c.at.get(x) !== r) push(room.get(r).gone, x, c);
   }
   const buildings = [...new Set(rooms.map((r) => r.building))];
 
+  // building, "with changes" and the search are shared by both schedule tabs, so switching compares the same rooms
   const state = {
-    view: A.remember('ns-view', 'week'),
+    view: CURRENT ? 'week' : A.remember('ns-view', 'week'),
     only: A.remember('ns-only', 'all'),
     bld: A.remember('ns-bld', 'all'),
     q: '',
   };
+  const normQ = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
+  $('#q').value = A.remember('ns-q', '');
+  state.q = normQ($('#q').value);
   if (state.bld !== 'all' && !buildings.includes(state.bld)) state.bld = 'all';
 
   const matches = (c) => !state.q || c.text.includes(state.q);
@@ -90,6 +101,7 @@
     for (const c of here) {
       t += `<br><b>${esc(c.label)}</b> · quota ${c.quota || '?'} · ${esc(c.course)}`;
       if (changed(c)) t += `<br>&nbsp;&nbsp;SU: ${esc(whereText(c.now, c.was))}<br>&nbsp;&nbsp;Model: ${esc(whereText(c.slots, c.at))}`;
+      else if (CURRENT) t += '<br>&nbsp;&nbsp;Same time and room in the model';
     }
     for (const c of gone) t += `<br><s>${esc(c.label)}</s> was here at SU, model: ${esc(whereText(c.slots, c.at))}`;
     return t;
@@ -112,7 +124,7 @@
         const cls = here.length > 1 ? 'over' : here.length ? 'some' : brk ? 'brk' : '';
         html += `<div class="wk-c ${cls}" data-tip="${esc(tipFor(rm, d, r, here, gone))}">`
           + (brk && !here.length ? '<span class="wk-brk">break</span>' : '')
-          + here.map((c) => chip(c, !c.now.includes(x) ? ' nt' : c.was.get(x) !== rm.id ? ' nr' : '')).join('')
+          + here.map((c) => chip(c, CURRENT ? '' : !c.now.includes(x) ? ' nt' : c.was.get(x) !== rm.id ? ' nr' : '')).join('')
           + gone.map((c) => chip(c, ' ghost')).join('')
           + '</div>';
       }
@@ -138,7 +150,7 @@
         <div class="br-head">
           <h3 class="br-name">${esc(rm.id)} <small>${rm.seats} seats</small></h3>
           ${rm.lab ? '<span class="ns-badge lab">Lab</span>' : ''}
-          ${nChg ? `<span class="ns-badge chg">${nChg} change${nChg === 1 ? '' : 's'}</span>` : ''}
+          ${nChg ? `<span class="ns-badge chg">${nChg} ${CURRENT ? `class${nChg === 1 ? '' : 'es'} change in the model` : `change${nChg === 1 ? '' : 's'}`}</span>` : ''}
           <span class="br-count">${ids.size} class${ids.size === 1 ? '' : 'es'}</span>
         </div>
         <div class="br-hours">
@@ -173,7 +185,7 @@
   }
 
   function render() {
-    A.save('ns-view', state.view);
+    if (!CURRENT) A.save('ns-view', state.view);
     A.save('ns-only', state.only);
     A.save('ns-bld', state.bld);
     const seg = (id, key, opts) => {
@@ -181,11 +193,14 @@
     };
     seg('#view', 'view', [['week', 'Week by room'], ['list', 'Changes list']]);
     seg('#only', 'only', [['all', 'All rooms'], ['changed', 'With changes']]);
+    $('#view').hidden = CURRENT;
     $('#only').hidden = state.view !== 'week';
     $('#bld').innerHTML = `<option value="all">All buildings</option>`
       + buildings.map((b) => `<option value="${esc(b)}"${b === state.bld ? ' selected' : ''}>${esc(A.BUILDINGS[b] ? `${b} – ${A.BUILDINGS[b]}` : b)}</option>`).join('');
 
-    $('#legend').innerHTML = state.view === 'week'
+    $('#legend').innerHTML = CURRENT
+      ? YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('')
+      : state.view === 'week'
       ? YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('')
         + '<span class="k"><span class="wk-chip y2 nt">CS 300</span> new hour</span>'
         + '<span class="k"><span class="wk-chip y2 nr">CS 300</span> same hour, new room</span>'
@@ -196,7 +211,23 @@
 
   // ---------- Tiles and footnote (do not change with the filters) ----------
   const clash = R.groups?.clash;
-  $('#tiles').innerHTML = `
+  const edgeHours = (key) => placed.reduce((s, c) => s + c[key].filter((x) => x % ROWS === 0 || x % ROWS === GRID_ROWS - 1).length, 0);
+  if (CURRENT) {
+    const inRooms = rooms.reduce((s, rm) => s + [...rm.here.values()].reduce((t, l) => t + l.length, 0), 0);
+    const busy = rooms.filter((rm) => [...rm.here.values()].some((l) => l.length > 1)).length;
+    $('#tiles').innerHTML = `
+      <div class="tile"><b>${fmt(placed.length)}</b><span>classes with a campus room (${R.rooms.length} rooms, ${R.labs} of them labs)</span></div>
+      <div class="tile"><b>${fmt(inRooms)} h</b><span>class hours in these rooms a week</span></div>
+      <div class="tile"><b>${fmt(edgeHours('now'))} h</b><span>class hours at 08:40 or 18:40 (model: ${fmt(edgeHours('slots'))} h)</span></div>
+      <div class="tile"><b>${classes.filter(changed).length}</b><span>classes the model gives a new time or room</span></div>
+      ${clash ? `<div class="tile"><b>${clash[0]}</b><span>student clash hours (model: ${clash[1]})</span></div>` : ''}
+      ${busy ? `<div class="tile"><b>${busy}</b><span>rooms with two classes at the same hour somewhere</span></div>` : ''}`;
+    $('#foot').innerHTML = `SU's own ${esc(R.termName)} timetable, with the same rooms, filters and colours as the New schedule tab, so the two
+      can be compared room by room (the building, "with changes" and search choices carry over between the tabs). Hover a cell to
+      see where the model puts that class. Rooms are SU's teaching rooms (no stands, lobbies or rooms with ${R.settings.minSeats - 1} seats or
+      fewer); classes held elsewhere are not shown. Chip colour = course year; red cell = two classes in the room at that hour.`;
+  }
+  if (!CURRENT) $('#tiles').innerHTML = `
     <div class="tile"><b>${fmt(placed.length)}</b><span>classes with a campus room (${R.rooms.length} rooms, ${R.labs} of them labs)</span></div>
     <div class="tile"><b>${fmt(kept)} <small class="muted">of ${fmt(totalHours)} h</small></b><span>class hours kept at SU's time</span></div>
     <div class="tile"><b>${fmt(placed.reduce((s, c) => s + c.slots.filter((x) => x % ROWS === 0 || x % ROWS === GRID_ROWS - 1).length, 0))} h</b><span>class hours at 08:40 or 18:40 (SU: ${fmt(placed.reduce((s, c) => s + c.now.filter((x) => x % ROWS === 0 || x % ROWS === GRID_ROWS - 1).length, 0))} h)</span></div>
@@ -206,7 +237,7 @@
     ${clash ? `<div class="tile"><b class="${clash[1] < clash[0] ? 'good' : ''}">${clash[0]}<span class="arrow">→</span>${clash[1]}</b><span>student clash hours (SU → model)</span></div>` : ''}`;
 
   const s2 = R.stage2;
-  $('#foot').innerHTML = `Model run ${esc(R.run)}, ${esc(R.termName)}. Stage 1 (times): ${esc(R.status)} in ${R.seconds} s;
+  if (!CURRENT) $('#foot').innerHTML = `Model run ${esc(R.run)}, ${esc(R.termName)}. Stage 1 (times): ${esc(R.status)} in ${R.seconds} s;
     goal = −10 × demand for every class hour at 08:40 and 18:40 (demand ${R.demand?.on ? 'from each major\'s 3rd-year required courses, 1 for the rest' : '= 1'}),
     SU's own times are not rewarded, first-year courses are locked to them.
     ${s2 ? `Stage 2 (rooms): ${esc(s2.status)} in ${s2.seconds} s, ${fmt(s2.variables)} variables.` : ''}
@@ -227,7 +258,7 @@
   let timer = 0;
   $('#q').addEventListener('input', (e) => {
     clearTimeout(timer);
-    timer = setTimeout(() => { state.q = e.target.value.toLowerCase().replace(/\s+/g, ''); render(); }, 150);
+    timer = setTimeout(() => { state.q = normQ(e.target.value); A.save('ns-q', e.target.value); render(); }, 150);
   });
   A.tip(document.querySelector('main'));
   render();
