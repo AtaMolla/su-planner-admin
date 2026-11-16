@@ -47,6 +47,14 @@
 .tg-s.ghost { color: var(--faint); text-decoration: line-through; border-style: dashed; }
 .wk-chip.ghost::before, .wk-chip.ghost::after { content: none; }
 
+/* program course types: Required / Core / Area tags */
+.ns-filters { margin-top: -6px; }
+.tg-k { padding: 0 4px; border-radius: 3px; font-size: 9.5px; font-weight: 800; line-height: 15px; text-transform: uppercase; letter-spacing: 0.3px; }
+.tg-k.k-req { background: #fbe7e8; color: var(--bad); }
+.tg-k.k-core { background: #e2ebf8; color: var(--brand); }
+.tg-k.k-area { background: #e4f3e8; color: var(--ok); }
+#cats button[aria-pressed="true"] .tg-k { box-shadow: 0 0 0 1px #fff; }
+
 @media (max-width: 760px) {
   .controls input[type="search"] { width: 100%; }
   .tg { grid-template-columns: 44px repeat(5, minmax(150px, 1fr)); padding: 8px; }

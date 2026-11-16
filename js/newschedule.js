@@ -87,6 +87,46 @@
     q: '',
   };
   if (!VIEWS.some(([v]) => v === state.view)) state.view = 'time';
+
+  // ---------- Year and program filters (shared by both schedule tabs) ----------
+  state.hide = new Set(A.remember('ns-hide-years', []));          // course years to hide
+  state.prog = A.remember('ns-prog', 'all');                      // program id or 'all'
+  state.entry = A.remember('ns-entry', A.TERMS[0]?.term);         // the program's curriculum of this entry year
+  state.cats = new Set(A.remember('ns-cats', ['req', 'core', 'area']));
+  if (state.prog !== 'all' && !A.PROGRAMS.some((p) => p.id === state.prog)) state.prog = 'all';
+  const KINDS = [['req', 'Required'], ['core', 'Core'], ['area', 'Area']];
+  const KIND_OF = { required: 'req', requirement: 'req', core: 'core', area: 'area' };
+  let progKind = new Map();                                       // course code -> 'req' | 'core' | 'area'
+  function loadProgram() {
+    progKind = new Map();
+    if (state.prog === 'all') return;
+    const terms = A.S.termsFor(state.prog).map((t) => t.term);
+    if (!terms.includes(state.entry)) state.entry = terms[0];
+    for (const cat of A.S.requirementsFor(state.prog, state.entry) || []) {
+      const k = KIND_OF[A.S.categoryKind(cat)];
+      if (!k) continue;
+      for (const code of cat.courses) {
+        const key = A.S.canonicalCode(code);
+        const old = progKind.get(key);
+        if (!old || KINDS.findIndex(([v]) => v === k) < KINDS.findIndex(([v]) => v === old)) progKind.set(key, k);
+      }
+    }
+  }
+  loadProgram();
+  const kindOf = (c) => {
+    let best = null;
+    for (const code of c.codes) {
+      const k = progKind.get(A.S.canonicalCode(code));
+      if (k && (!best || KINDS.findIndex(([v]) => v === k) < KINDS.findIndex(([v]) => v === best))) best = k;
+    }
+    return best;
+  };
+  const shown = (c) => !state.hide.has(c.year) && (state.prog === 'all' || state.cats.has(kindOf(c)));
+  const kindTag = (c) => {
+    if (state.prog === 'all') return '';
+    const k = kindOf(c);
+    return k ? `<span class="tg-k k-${k}">${KINDS.find(([v]) => v === k)[1]}</span>` : '';
+  };
   if (state.subj !== 'all' && !subjects.includes(state.subj)) state.subj = 'all';
   const normQ = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
   $('#q').value = A.remember('ns-q', '');
@@ -134,8 +174,8 @@
       html += `<div class="wk-t">${A.rowStart(r)}</div>`;
       for (let d = 0; d < 5; d++) {
         const x = d * ROWS + r;
-        const here = rm.here.get(x) || [];
-        const gone = rm.gone.get(x) || [];
+        const here = (rm.here.get(x) || []).filter(shown);
+        const gone = (rm.gone.get(x) || []).filter(shown);
         const brk = blocked.has(x);
         const cls = here.length > 1 ? 'over' : here.length ? 'some' : brk ? 'brk' : '';
         html += `<div class="wk-c ${cls}" data-tip="${esc(tipFor(rm, d, r, here, gone))}">`
@@ -162,7 +202,7 @@
     return '';
   };
   function timeCell(x) {
-    const keep = (c) => (state.subj === 'all' || c.subject === state.subj) && matches(c)
+    const keep = (c) => shown(c) && (state.subj === 'all' || c.subject === state.subj) && matches(c)
       && (state.only !== 'changed' || changed(c));
     const items = (CURRENT ? nowAt : modelAt).get(x)?.filter(keep).map((c) => ({ c, mark: markAt(c, x) })) || [];
     if (!CURRENT) {   // classes SU has at this hour and the model moved away: struck out
@@ -184,7 +224,7 @@
         }).join('');
       const secs = list.filter((it) => it.c.sec).map(({ c, mark }) => `<span class="tg-s ${mark}">${esc(c.sec)}</span>`).join('');
       const solo = list.length === 1 && !list[0].c.sec ? ` ${list[0].mark}` : '';
-      return `<div class="tg-g" data-tip="${esc(tip)}"><span class="wk-chip y${c0.year}${solo}">${esc(course)}</span>${secs}</div>`;
+      return `<div class="tg-g" data-tip="${esc(tip)}"><span class="wk-chip y${c0.year}${solo}">${esc(course)}</span>${kindTag(c0)}${secs}</div>`;
     }).join('');
     return { n, html };
   }
@@ -205,7 +245,8 @@
   function renderWeek() {
     const shown = rooms.filter((rm) => {
       if (state.bld !== 'all' && rm.building !== state.bld) return false;
-      const all = [...[...rm.here.values()].flat(), ...[...rm.gone.values()].flat()];
+      const all = [...[...rm.here.values()].flat(), ...[...rm.gone.values()].flat()].filter(shown);
+      if ((state.prog !== 'all' || state.hide.size) && !all.length) return false;
       if (state.only === 'changed' && !rm.gone.size && !all.some(changed)) return false;
       if (state.q && !all.some(matches)) return false;
       return true;
@@ -236,7 +277,7 @@
   function renderList() {
     const inBld = (c) => state.bld === 'all'
       || [...c.at.values(), ...c.was.values()].some((r) => r && A.roomOf(r)?.building === state.bld);
-    const list = classes.filter((c) => changed(c) && matches(c) && inBld(c))
+    const list = classes.filter((c) => changed(c) && shown(c) && matches(c) && inBld(c))
       .sort((a, b) => b.newTime - a.newTime || A.byCode(a.name, b.name));
     if (!list.length) return '<p class="empty">No changed classes match.</p>';
     const cell = (c, slots, roomAt, other, otherAt) => runs(slots, roomAt).map((r) => {
@@ -259,6 +300,25 @@
     A.save('ns-only', state.only);
     A.save('ns-bld', state.bld);
     A.save('ns-subj', state.subj);
+    A.save('ns-hide-years', [...state.hide]);
+    A.save('ns-prog', state.prog);
+    A.save('ns-entry', state.entry);
+    A.save('ns-cats', [...state.cats]);
+    $('#years').innerHTML = YEARS.map(([id, label]) =>
+      `<button type="button" data-year="${id}" class="yr y${id}" aria-pressed="${!state.hide.has(id)}" title="${state.hide.has(id) ? 'Show' : 'Hide'} ${label} courses">${label}</button>`).join('');
+    $('#prog').innerHTML = '<option value="all">All programs</option>'
+      + A.PROGRAMS.map((p) => `<option value="${esc(p.id)}"${p.id === state.prog ? ' selected' : ''}>${esc(p.short)} – ${esc(p.name)}</option>`).join('');
+    const progOn = state.prog !== 'all';
+    $('#entry').hidden = !progOn;
+    $('#cats').hidden = !progOn;
+    if (progOn) {
+      $('#entry').innerHTML = A.S.termsFor(state.prog).map((t) =>
+        `<option value="${t.term}"${t.term === state.entry ? ' selected' : ''}>Curriculum: ${esc(A.entryLabel(t.term))} entry</option>`).join('');
+      $('#cats').innerHTML = KINDS.map(([k, label]) => {
+        const n = [...progKind.values()].filter((v) => v === k).length;
+        return `<button type="button" data-cat="${k}" aria-pressed="${state.cats.has(k)}"><span class="tg-k k-${k}">${label}</span> ${n}</button>`;
+      }).join('');
+    }
     const seg = (id, key, opts) => {
       $(id).innerHTML = opts.map(([v, label]) => `<button type="button" data-v="${v}" aria-pressed="${state[key] === v}">${label}</button>`).join('');
     };
@@ -275,7 +335,7 @@
     $('#subj').innerHTML = `<option value="all">All subjects</option>`
       + subjects.map((s) => `<option value="${esc(s)}"${s === state.subj ? ' selected' : ''}>${esc(s)}</option>`).join('');
 
-    const years = YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('');
+    const years = '';   // the year buttons above double as the colour key
     $('#legend').innerHTML = CURRENT ? years
       : time ? years
         + '<span class="k"><span class="wk-chip y2">MATH 201</span><span class="tg-s nt">A</span> new hour</span>'
@@ -336,6 +396,22 @@
   pick('#only', 'only');
   $('#bld').addEventListener('change', (e) => { state.bld = e.target.value; render(); });
   $('#subj').addEventListener('change', (e) => { state.subj = e.target.value; render(); });
+  $('#years').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-year]');
+    if (!b) return;
+    const y = b.dataset.year;
+    if (state.hide.has(y)) state.hide.delete(y); else state.hide.add(y);
+    render();
+  });
+  $('#prog').addEventListener('change', (e) => { state.prog = e.target.value; loadProgram(); render(); });
+  $('#entry').addEventListener('change', (e) => { state.entry = e.target.value; loadProgram(); render(); });
+  $('#cats').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    const k = b.dataset.cat;
+    if (state.cats.has(k)) state.cats.delete(k); else state.cats.add(k);
+    render();
+  });
   let timer = 0;
   $('#q').addEventListener('input', (e) => {
     clearTimeout(timer);

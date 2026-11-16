@@ -114,6 +114,10 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
   `<body data-mode="current">`), so the two tabs can be compared room by room. The building, "with
   changes" and search choices carry over between the two tabs. Hovering a class shows where the model puts it.
 
+Both schedule tabs share these filters (kept when you switch tabs): year buttons (click to hide a course
+year), a program picker with its curriculum entry year, and Required / Core / Area toggles that show only
+that program's courses of those types (tagged on each course).
+
 ### New schedule (`newschedule.html`)
 
 - The Fall timetable the term project's model builds. Stage 1 picks each class's hours, and stage 2
