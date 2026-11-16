@@ -2,67 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SU Planner Admin – Required-course clashes</title>
-  <meta name="description" content="Required courses that meet at the same time in Sabancı University's suggested 4-year plans.">
-  <link rel="stylesheet" href="css/admin.css?v=202611161522">
-  <link rel="stylesheet" href="css/clashes.css?v=202611161522">
+  <title>SU Planner Admin</title>
+  <meta http-equiv="refresh" content="0; url=bigrooms.html">
+  <link rel="canonical" href="bigrooms.html">
 </head>
-<body>
-  <header class="topbar">
-    <h1 class="brand"><a href="index.html">SU<span class="bp"> Planner</span> <small>Admin</small></a></h1>
-    <nav class="page-tabs" aria-label="Pages">
-      <a href="index.html" aria-current="page"><span class="long">Required-course clashes</span><span class="short">Clashes</span></a>
-      <a href="courses.html"><span class="long">Course overview</span><span class="short">Courses</span></a>
-      <a href="rooms.html"><span class="long">Room &amp; time usage</span><span class="short">Rooms</span></a>
-      <a href="changes.html"><span class="long">Curriculum changes</span><span class="short">Changes</span></a>
-      <a href="model.html"><span class="long">Timetable model</span><span class="short">Model</span></a>
-      <a href="bigrooms.html"><span class="long">Big rooms</span><span class="short">Big</span></a>
-    </nav>
-    <a class="student-link" href="https://atamolla.github.io/su-planner/">Student site ↗</a>
-  </header>
-
-  <main>
-    <section class="page-head">
-      <h2>Required-course clashes</h2>
-      <p>Each program's suggested 4-year plan, for every entry year from Fall 2020 to Fall 2026, checked against this
-        year's class schedule (Fall semesters against Fall 2026-27, Spring against Spring 2026-27). A semester
-        <b>clashes</b> when no choice of sections lets a student take all of its required courses without two of them
-        meeting at the same time.</p>
-    </section>
-
-    <div id="tiles" class="tiles"></div>
-
-    <div class="controls">
-      <label>Program <select id="program"></select></label>
-      <label class="check"><input id="now-only" type="checkbox"> Only semesters students take this year</label>
-    </div>
-
-    <h3>Fix list</h3>
-    <p class="muted small">Course pairs whose sections always overlap, wherever a suggested plan puts them in the same semester. Fix one by moving a section or opening a new one at another hour.</p>
-    <div id="fix-list"></div>
-
-    <h3>By program and entry year</h3>
-    <p class="muted small">Semesters with a clash, out of 8. Click a square to see that plan.</p>
-    <div id="matrix" class="table-wrap"></div>
-
-    <h3 id="detail-title">Plan</h3>
-    <div id="detail"></div>
-
-    <p class="note">The plan is the one SU Planner suggests (required courses in prerequisite order, by course
-      level, in a season they run in), but kept in curriculum order: SU Planner itself pushes a clashing course to a
-      later semester, which hides the clash from students and delays their plan. Elective placeholders,
-      PROJ courses (times arranged after registration) and summer internships are not checked.</p>
-  </main>
-
-  <script src="data/courses.js?v=202611161522"></script>
-  <script src="data/schedule-202602.js?v=202611161522"></script>
-  <script src="data/requirements.js?v=202611161522"></script>
-  <script src="js/programs.js?v=202611161522"></script>
-  <script src="js/shared.js?v=202611161522"></script>
-  <script src="js/times.js?v=202611161522"></script>
-  <script src="js/common.js?v=202611161522"></script>
-  <script src="js/plan-core.js?v=202611161522"></script>
-  <script src="js/clashes.js?v=202611161522"></script>
-</body>
+<body><p><a href="bigrooms.html">SU Planner Admin – Big rooms</a></p></body>
 </html>

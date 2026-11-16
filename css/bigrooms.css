@@ -52,7 +52,8 @@
 .wk-chip.y3, .yr-dot.y3 { background: #c46a12; }
 .wk-chip.y4, .yr-dot.y4 { background: #7a3fa8; }
 .wk-chip.yg, .yr-dot.yg { background: #5b6472; }
-.wk-chip.oq { box-shadow: 0 0 0 2px var(--bad); }
+.wk-chip.oq { outline: 2px dashed #18212b; outline-offset: 1px; }
+.badge.over-seats { background: #eef0f3; color: var(--muted); }
 .yr-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
 .years { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .yr { padding: 4px 10px; border: 2px solid transparent; border-radius: 14px; color: #fff; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }

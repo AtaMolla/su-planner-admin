@@ -111,7 +111,7 @@
       const rows = own.map((s) => `<tr>
           <td class="nowrap"><span class="yr-dot y${s.year}"></span><b>${esc(labelOf(s))}</b></td>
           <td class="c-name cname">${esc(s.name)}</td>
-          <td class="num"><b>${s.quota ?? '–'}</b>${overQuota(s, room) ? ' <span class="badge bad">more than seats</span>' : ''}</td>
+          <td class="num"><b>${s.quota ?? '–'}</b>${overQuota(s, room) ? ' <span class="badge over-seats">above seats</span>' : ''}</td>
           <td class="num">${s.slots.length} h</td>
           <td class="c-time small">${esc(A.slotsLabel(s.slots))}</td></tr>`).join('');
       return `<section class="card br-card">
@@ -136,7 +136,7 @@
       there (– = not known). Rooms are the teaching rooms in SU's room list with ${LARGE}+ seats.
       Large = ${LARGE}–${VERY_LARGE - 1} seats, Very large = ${VERY_LARGE}+. A room offers ${HOURS_PER_ROOM} hours a week
       (Mon–Fri 08:40–19:30, minus the Friday 12:40–14:30 break). Chip colour = course year (from the course number;
-      500+ = graduate). Red outline = quota above the room's seats; red cell = more than one class at that hour.`;
+      500+ = graduate). Dashed outline = quota above the room's seats (SU already does this, so it is allowed); red cell = more than one class at that hour.`;
   }
 
   $('#kind').addEventListener('click', (e) => {

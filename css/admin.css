@@ -195,3 +195,20 @@ details.fold[open] summary { margin-bottom: 4px; }
   .topbar, .controls { display: none; }
   body { background: #fff; }
 }
+
+/* Second row of tabs on the pages under "Others" */
+.sub-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; max-width: 1240px; margin: 0 auto; padding: 10px 20px 0; font-size: 13.5px; }
+.sub-tabs span { color: var(--muted); font-weight: 600; margin-right: 2px; }
+.sub-tabs a { padding: 3px 10px; border-radius: 14px; background: var(--s0); color: var(--ink); text-decoration: none; }
+.sub-tabs a:hover { background: #e2ebf8; }
+.sub-tabs a[aria-current="page"] { background: var(--brand); color: #fff; }
+@media (max-width: 760px) { .sub-tabs { padding: 8px 12px 0; } }
+@media print { .sub-tabs { display: none; } }
+
+/* Others page: links to the older views */
+.others { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 8px; }
+.card.other { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; color: var(--ink); text-decoration: none; }
+.card.other b { color: var(--brand-hi); font-size: 16px; }
+.card.other span { color: var(--muted); font-size: 13.5px; }
+.card.other:hover { border-color: var(--brand-hi); }
+.others .card + .card { margin-top: 0; }

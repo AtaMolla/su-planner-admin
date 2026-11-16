@@ -9,7 +9,7 @@ Plain HTML, CSS and JavaScript: no build step, no libraries, no server code.
 
 ## Open it
 
-Double-click `index.html`. It works straight from disk because the data files are `.js` files, not
+Double-click `index.html` (it opens Big rooms). It works straight from disk because the data files are `.js` files, not
 fetched JSON. Or serve it locally, which always shows the latest version of every file:
 
 ```
@@ -20,7 +20,7 @@ then open http://localhost:8766/.
 
 ## The views
 
-### Required-course clashes (`index.html`)
+### Required-course clashes (`clashes.html`)
 
 - For each of the 12 undergraduate programs and each entry year (Fall 2020 to Fall 2026), it builds
   the suggested 4-year plan SU Planner gives students and checks every Fall/Spring semester against
@@ -112,7 +112,7 @@ After changing CSS, JS or data, run `python tools/bump_version.py` before upload
 
 ## Files
 
-- `index.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`, `bigrooms.html`: the six views, one script and one
+- `bigrooms.html` and, under `others.html`, `clashes.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`: the views, one script and one
   stylesheet each in `js/` and `css/`
 - `css/admin.css`: shared look (top bar, controls, tables, chips, heatmap cells)
 - `js/common.js`: shared helpers (time labels, room names, heatmap colours, tooltips)
