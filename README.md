@@ -104,6 +104,20 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
   size or bigger offer (53 h each: Mon–Fri 08:40–18:40 minus the Friday 12:40–14:30 break).
 - Quotas come from `data/quota.js`, written by the term project's `get_capacity.py` (SU's class search).
 
+### New schedule (`newschedule.html`)
+
+- The Fall timetable the term project's model builds. Stage 1 picks each class's hours, and stage 2
+  gives each hour a room. Data: `data/model-result.js`.
+- **Week by room:** one week grid per teaching room, coloured by course year. Markers show what
+  changed from SU's timetable:
+  - **+** = a new hour for that class
+  - **→** = same hour, but the class moved into this room
+  - struck-out chip = the class was here at SU, and the model put it somewhere else
+- **Changes list:** every class with a new time or a new room, SU vs model side by side.
+- Filters: building, rooms with changes only, and a course search.
+- Tiles: hours kept at SU's time, classes moved, new rooms, classes in one room all week, and
+  student clash hours (SU → model).
+
 Rules carried over from SU Planner: PROJ 302 isn't a separate class (it is PROJ 201); x95 courses are
 summer internships; a Spring course with no Spring schedule loaded uses the Fall times.
 
@@ -112,7 +126,7 @@ After changing CSS, JS or data, run `python tools/bump_version.py` before upload
 
 ## Files
 
-- `bigrooms.html` and, under `others.html`, `clashes.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`: the views, one script and one
+- `bigrooms.html`, `newschedule.html` and, under `others.html`, `clashes.html`, `courses.html`, `rooms.html`, `changes.html`, `model.html`: the views, one script and one
   stylesheet each in `js/` and `css/`
 - `css/admin.css`: shared look (top bar, controls, tables, chips, heatmap cells)
 - `js/common.js`: shared helpers (time labels, room names, heatmap colours, tooltips)
@@ -120,5 +134,5 @@ After changing CSS, JS or data, run `python tools/bump_version.py` before upload
 - `js/shared.js`, `js/programs.js`, `js/times.js`: from SU Planner (requirement helpers, program list,
   class times and the clash-free timetable search)
 - `data/quota.js`: section quotas (seats) from SU's class search, written by the term project
-- `data/model-result.js`: written by the term project's model, read by `model.html`
+- `data/model-result.js`: written by the term project's model, read by `model.html` and `newschedule.html`
 - `tools/`: data scripts (`build_rooms.py --filter` re-applies the teaching-room filter), `serve.py` (local server without caching), `bump_version.py`

@@ -1,0 +1,35 @@
+/* New schedule page (uses the week grid and year colours of bigrooms.css) */
+.controls select, .controls input[type="search"] { min-width: 0; }
+.ns-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: -4px 0 12px; color: var(--muted); font-size: 12.5px; }
+.ns-legend .k { display: inline-flex; align-items: center; gap: 5px; }
+.ns-legend .wk-chip { font-size: 10px; }
+
+/* change markers on chips */
+.wk-chip.nt { box-shadow: 0 0 0 2px #f0b400; }                 /* new hour */
+.wk-chip.nr { box-shadow: 0 0 0 2px #f0b400; }
+.wk-chip.nr::before { content: "→ "; }                          /* same hour, moved into this room */
+.wk-chip.nt::before { content: "+ "; }                          /* new hour */
+.wk-chip.ghost { background: transparent !important; color: var(--faint); box-shadow: inset 0 0 0 1px var(--line); text-decoration: line-through; }
+.wk-chip.dim { opacity: 0.22; }
+.wk-chip.hit { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+.ns-badge { padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; white-space: nowrap; background: #eef0f3; color: var(--muted); }
+.ns-badge.lab { background: #e4f3e8; color: var(--ok); }
+.ns-badge.chg { background: #fdf1d8; color: var(--warn); }
+
+.tile b .arrow { color: var(--faint); font-weight: 500; margin: 0 4px; }
+.tile b.good { color: var(--ok); }
+
+/* changes list */
+.ns-list td { vertical-align: top; }
+.ns-list .cname { display: block; color: var(--muted); font-size: 12px; }
+.ns-list .run { display: block; white-space: nowrap; }
+.ns-list .run.diff { color: var(--brand); font-weight: 650; }
+.ns-list .run .rm { font-family: var(--mono); font-size: 12px; }
+.ns-list .chg { white-space: nowrap; }
+.ns-empty { padding: 14px 16px; color: var(--faint); }
+
+@media (max-width: 760px) {
+  .controls input[type="search"] { width: 100%; }
+  .ns-list .c-name { display: none; }
+}

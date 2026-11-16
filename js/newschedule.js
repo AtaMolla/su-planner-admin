@@ -1,0 +1,231 @@
+/* New schedule page: the timetable the IE 312 class scheduling model builds (data/model-result.js,
+   written by class_scheduling.py in the term project folder). Stage 1 = each class's hours,
+   stage 2 = the room of each hour. Shown room by room as week grids, or as a list of changes. */
+(() => {
+  'use strict';
+
+  const A = window.SUAdmin;
+  const { esc, ROWS } = A;
+  const $ = (sel) => document.querySelector(sel);
+  const fmt = (n) => n.toLocaleString('en');
+  const R = window.MODEL_RESULT;
+  const GRID_ROWS = 11; // the model plans 08:40 … 18:40
+
+  if (!R || !R.rooms || !R.classes?.length || R.classes[0].length < 9) {
+    $('main').insertAdjacentHTML('beforeend', '<p class="empty">No room results yet. Run class_scheduling.py (stage 2) in the term project folder.</p>');
+    return;
+  }
+
+  const norm = (p) => (p ? A.roomOf(p)?.id || p : null);
+  const YEARS = [['1', '1st year'], ['2', '2nd year'], ['3', '3rd year'], ['4', '4th year'], ['g', 'Graduate']];
+  const yearOf = (code) => {
+    const d = Number((String(code).match(/\d/) || ['1'])[0]);
+    return d >= 5 ? 'g' : String(Math.max(1, d));
+  };
+  // "CS303-B" -> "CS 303 B", "MATH409-0/MATH555-0" -> "MATH 409 / MATH 555"
+  const labelOf = (name) => name.split('/').map((s) => s.replace(/_\d+$/, '').replace(/-0$/, '').replace(/-/, ' ')
+    .replace(/^([A-Z]+)/, '$1 ')).join(' / ');
+  const blocked = new Set(R.settings.blocked);
+
+  // ---------- Classes ----------
+  // [name, codes, quota, flags, rooms now, SU slots, model slots | null, model room per model slot, SU room per SU slot]
+  const classes = R.classes.map(([name, codes, quota, flags, , now, model, mrooms, suRoom]) => {
+    const slots = model || now;
+    const at = new Map(slots.map((x, i) => [x, mrooms ? mrooms[i] : null]));   // model: slot -> room
+    const was = new Map(now.map((x, i) => [x, norm(suRoom?.[i])]));             // SU: slot -> room
+    const suRooms = new Set([...was.values()].filter(Boolean));
+    const used = new Set([...at.values()].filter(Boolean));
+    return {
+      name, label: labelOf(name), codes, quota, now, slots, at, was, campus: !!(flags & 4), lab: !!(flags & 2),
+      fixed: !!(flags & 1), year: yearOf(codes[0]), course: A.courseName(codes[0]),
+      newTime: !!model, newRoom: !!mrooms && [...used].some((r) => !suRooms.has(r)), oneRoom: used.size === 1,
+      text: `${codes.join(' ')} ${labelOf(name)} ${name}`.toLowerCase().replace(/\s+/g, ''),
+    };
+  });
+  const placed = classes.filter((c) => c.campus);
+  const totalHours = classes.reduce((s, c) => s + c.now.length, 0);
+  const kept = classes.reduce((s, c) => s + c.now.filter((x) => c.at.has(x)).length, 0);
+
+  // ---------- Rooms ----------
+  const rooms = R.rooms.map(([id, lab, seats]) => ({ ...A.roomOf(id), lab, seats, here: new Map(), gone: new Map() }))
+    .sort((a, b) => a.building.localeCompare(b.building) || A.byCode(a.code, b.code));
+  const room = new Map(rooms.map((r) => [r.id, r]));
+  const push = (m, k, v) => { if (!m.has(k)) m.set(k, []); m.get(k).push(v); };
+  for (const c of placed) {
+    for (const [x, r] of c.at) if (room.has(r)) push(room.get(r).here, x, c);
+    // SU had it in this room at this hour, the model doesn't: a faded "moved away" chip
+    for (const [x, r] of c.was) if (room.has(r) && c.at.get(x) !== r) push(room.get(r).gone, x, c);
+  }
+  const buildings = [...new Set(rooms.map((r) => r.building))];
+
+  const state = {
+    view: A.remember('ns-view', 'week'),
+    only: A.remember('ns-only', 'all'),
+    bld: A.remember('ns-bld', 'all'),
+    q: '',
+  };
+  if (state.bld !== 'all' && !buildings.includes(state.bld)) state.bld = 'all';
+
+  const matches = (c) => !state.q || c.text.includes(state.q);
+  const changed = (c) => c.newTime || c.newRoom;
+  // "Mon 10:40–12:30 FASS G062, Wed 10:40–11:30 FASS G062": runs of back-to-back hours in one room
+  function runs(slots, roomAt) {
+    const s = [...slots].sort((a, b) => a - b);
+    const out = [];
+    for (let i = 0; i < s.length; i++) {
+      let j = i;
+      while (j + 1 < s.length && s[j + 1] === s[j] + 1 && Math.floor(s[j + 1] / ROWS) === Math.floor(s[i] / ROWS)
+        && roomAt.get(s[j + 1]) === roomAt.get(s[i])) j++;
+      out.push({ from: s[i], to: s[j], room: roomAt.get(s[i]) || 'no campus room', slots: s.slice(i, j + 1) });
+      i = j;
+    }
+    return out;
+  }
+  const runText = (r) => `${A.DAYS[Math.floor(r.from / ROWS)]} ${A.rowStart(r.from % ROWS)}–${A.rowEnd(r.to % ROWS)}`;
+  const whereText = (slots, roomAt) => runs(slots, roomAt).map((r) => `${runText(r)} ${r.room}`).join(', ');
+
+  function tipFor(rm, d, r, here, gone) {
+    let t = `<b>${esc(rm.id)} · ${A.DAY_NAMES[d]} ${A.rowStart(r)}–${A.rowEnd(r)}</b>`;
+    if (!here.length && !gone.length) return t + '<br>Free';
+    for (const c of here) {
+      t += `<br><b>${esc(c.label)}</b> · quota ${c.quota || '?'} · ${esc(c.course)}`;
+      if (changed(c)) t += `<br>&nbsp;&nbsp;SU: ${esc(whereText(c.now, c.was))}<br>&nbsp;&nbsp;Model: ${esc(whereText(c.slots, c.at))}`;
+    }
+    for (const c of gone) t += `<br><s>${esc(c.label)}</s> was here at SU, model: ${esc(whereText(c.slots, c.at))}`;
+    return t;
+  }
+
+  function chip(c, cls) {
+    const dim = state.q && !matches(c) ? ' dim' : state.q ? ' hit' : '';
+    return `<span class="wk-chip y${c.year}${cls}${dim}">${esc(c.label)}</span>`;
+  }
+
+  function weekGrid(rm) {
+    let html = '<div class="wk"><div class="wk-h"></div>' + A.DAY_NAMES.map((d) => `<div class="wk-h">${d}</div>`).join('');
+    for (let r = 0; r < GRID_ROWS; r++) {
+      html += `<div class="wk-t">${A.rowStart(r)}</div>`;
+      for (let d = 0; d < 5; d++) {
+        const x = d * ROWS + r;
+        const here = rm.here.get(x) || [];
+        const gone = rm.gone.get(x) || [];
+        const brk = blocked.has(x);
+        const cls = here.length > 1 ? 'over' : here.length ? 'some' : brk ? 'brk' : '';
+        html += `<div class="wk-c ${cls}" data-tip="${esc(tipFor(rm, d, r, here, gone))}">`
+          + (brk && !here.length ? '<span class="wk-brk">break</span>' : '')
+          + here.map((c) => chip(c, !c.now.includes(x) ? ' nt' : c.was.get(x) !== rm.id ? ' nr' : '')).join('')
+          + gone.map((c) => chip(c, ' ghost')).join('')
+          + '</div>';
+      }
+    }
+    return html + '</div>';
+  }
+
+  function renderWeek() {
+    const shown = rooms.filter((rm) => {
+      if (state.bld !== 'all' && rm.building !== state.bld) return false;
+      const all = [...[...rm.here.values()].flat(), ...[...rm.gone.values()].flat()];
+      if (state.only === 'changed' && !rm.gone.size && !all.some(changed)) return false;
+      if (state.q && !all.some(matches)) return false;
+      return true;
+    });
+    if (!shown.length) return '<p class="empty">No rooms match.</p>';
+    return shown.map((rm) => {
+      const hours = [...rm.here.values()].reduce((s, l) => s + l.length, 0);
+      const have = 5 * GRID_ROWS - blocked.size;
+      const ids = new Set([...rm.here.values()].flat());
+      const nChg = new Set([...[...rm.here.values()].flat().filter(changed), ...[...rm.gone.values()].flat()]).size;
+      return `<section class="card br-card">
+        <div class="br-head">
+          <h3 class="br-name">${esc(rm.id)} <small>${rm.seats} seats</small></h3>
+          ${rm.lab ? '<span class="ns-badge lab">Lab</span>' : ''}
+          ${nChg ? `<span class="ns-badge chg">${nChg} change${nChg === 1 ? '' : 's'}</span>` : ''}
+          <span class="br-count">${ids.size} class${ids.size === 1 ? '' : 'es'}</span>
+        </div>
+        <div class="br-hours">
+          <span>Hours in use a week:</span>
+          <span class="meter"><i style="width:${Math.min(100, Math.round((hours / have) * 100))}%"></i></span>
+          <b>${hours} h</b><span>of ${have} h</span>
+        </div>
+        ${weekGrid(rm)}
+      </section>`;
+    }).join('');
+  }
+
+  function renderList() {
+    const inBld = (c) => state.bld === 'all'
+      || [...c.at.values(), ...c.was.values()].some((r) => r && A.roomOf(r)?.building === state.bld);
+    const list = classes.filter((c) => changed(c) && matches(c) && inBld(c))
+      .sort((a, b) => b.newTime - a.newTime || A.byCode(a.name, b.name));
+    if (!list.length) return '<p class="empty">No changed classes match.</p>';
+    const cell = (c, slots, roomAt, other, otherAt) => runs(slots, roomAt).map((r) => {
+      const diff = r.slots.some((x) => otherAt.get(x) !== roomAt.get(x) || !other.includes(x));
+      return `<span class="run${diff ? ' diff' : ''}">${runText(r)} <span class="rm">${esc(r.room)}</span></span>`;
+    }).join('');
+    return `<section class="card"><div class="table-wrap"><table class="data ns-list">
+      <thead><tr><th>Class</th><th class="num">Quota</th><th>SU timetable</th><th>Model</th><th>Change</th></tr></thead>
+      <tbody>${list.map((c) => `<tr>
+        <td><span class="yr-dot y${c.year}"></span><b>${esc(c.label)}</b><span class="cname c-name">${esc(c.course)}</span></td>
+        <td class="num">${c.quota || '–'}</td>
+        <td>${cell(c, c.now, c.was, c.slots, c.at)}</td>
+        <td>${cell(c, c.slots, c.at, c.now, c.was)}</td>
+        <td class="chg">${c.newTime ? '<span class="badge warn">new time</span> ' : ''}${c.newRoom ? '<span class="badge now">new room</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table></div></section>`;
+  }
+
+  function render() {
+    A.save('ns-view', state.view);
+    A.save('ns-only', state.only);
+    A.save('ns-bld', state.bld);
+    const seg = (id, key, opts) => {
+      $(id).innerHTML = opts.map(([v, label]) => `<button type="button" data-v="${v}" aria-pressed="${state[key] === v}">${label}</button>`).join('');
+    };
+    seg('#view', 'view', [['week', 'Week by room'], ['list', 'Changes list']]);
+    seg('#only', 'only', [['all', 'All rooms'], ['changed', 'With changes']]);
+    $('#only').hidden = state.view !== 'week';
+    $('#bld').innerHTML = `<option value="all">All buildings</option>`
+      + buildings.map((b) => `<option value="${esc(b)}"${b === state.bld ? ' selected' : ''}>${esc(A.BUILDINGS[b] ? `${b} – ${A.BUILDINGS[b]}` : b)}</option>`).join('');
+
+    $('#legend').innerHTML = state.view === 'week'
+      ? YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('')
+        + '<span class="k"><span class="wk-chip y2 nt">CS 300</span> new hour</span>'
+        + '<span class="k"><span class="wk-chip y2 nr">CS 300</span> same hour, new room</span>'
+        + '<span class="k"><span class="wk-chip y2 ghost">CS 300</span> here at SU, not in the model</span>'
+      : '';
+    $('#out').innerHTML = state.view === 'week' ? renderWeek() : renderList();
+  }
+
+  // ---------- Tiles and footnote (do not change with the filters) ----------
+  const clash = R.groups?.clash;
+  $('#tiles').innerHTML = `
+    <div class="tile"><b>${fmt(placed.length)}</b><span>classes with a campus room (${R.rooms.length} rooms, ${R.labs} of them labs)</span></div>
+    <div class="tile"><b>${fmt(kept)} <small class="muted">of ${fmt(totalHours)} h</small></b><span>class hours kept at SU's time</span></div>
+    <div class="tile"><b>${classes.filter((c) => c.newTime).length}</b><span>classes at a new time</span></div>
+    <div class="tile"><b>${classes.filter((c) => c.newRoom).length}</b><span>classes in a room they don't use at SU</span></div>
+    <div class="tile"><b>${placed.filter((c) => c.oneRoom).length}</b><span>classes in one room all week</span></div>
+    ${clash ? `<div class="tile"><b class="${clash[1] < clash[0] ? 'good' : ''}">${clash[0]}<span class="arrow">→</span>${clash[1]}</b><span>student clash hours (SU → model)</span></div>` : ''}`;
+
+  const s2 = R.stage2;
+  $('#foot').innerHTML = `Model run ${esc(R.run)}, ${esc(R.termName)}. Stage 1 (times): ${esc(R.status)} in ${R.seconds} s.
+    ${s2 ? `Stage 2 (rooms): ${esc(s2.status)} in ${s2.seconds} s, ${fmt(s2.variables)} variables.` : ''}
+    Rooms are SU's teaching rooms (no stands, lobbies or rooms with ${R.settings.minSeats - 1} seats or fewer); lab classes
+    use labs only, the other classes the other rooms, and every class gets a room with at least its quota in seats
+    (capped at the biggest room of its kind). ${classes.length - placed.length} classes meet off campus or in rooms
+    outside this list, so they have no room here. Chip colour = course year. "Here at SU" = SU's timetable had the class in this room
+    at this hour and the model put it somewhere else. Student clash hours count the student groups of the model (a course's
+    lecture with its own recitations and labs, and each program's same-year required courses).`;
+
+  const pick = (id, key) => $(id).addEventListener('click', (e) => {
+    const b = e.target.closest('[data-v]');
+    if (b) { state[key] = b.dataset.v; render(); }
+  });
+  pick('#view', 'view');
+  pick('#only', 'only');
+  $('#bld').addEventListener('change', (e) => { state.bld = e.target.value; render(); });
+  let timer = 0;
+  $('#q').addEventListener('input', (e) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { state.q = e.target.value.toLowerCase().replace(/\s+/g, ''); render(); }, 150);
+  });
+  A.tip(document.querySelector('main'));
+  render();
+})();
