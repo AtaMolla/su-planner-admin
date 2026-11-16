@@ -109,7 +109,8 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
 
 ### Current schedule (`currentschedule.html`)
 
-- SU's own Fall timetable, room by room, drawn by the same script as New schedule (`js/newschedule.js`,
+- SU's own Fall timetable. Default view **By time**: days × hours, every class at that hour grouped by
+  course with its sections (A1, A2, …), filtered by subject or search. **By room** shows it room by room, drawn by the same script as New schedule (`js/newschedule.js`,
   `<body data-mode="current">`), so the two tabs can be compared room by room. The building, "with
   changes" and search choices carry over between the two tabs. Hovering a class shows where the model puts it.
 
@@ -117,7 +118,9 @@ Copied from SU Planner, which has the scripts that read them from SU's public pa
 
 - The Fall timetable the term project's model builds. Stage 1 picks each class's hours, and stage 2
   gives each hour a room. Data: `data/model-result.js`.
-- **Week by room:** one week grid per teaching room, coloured by course year. Markers show what
+- **By time** (default): days × hours, every class at that hour grouped by course with its sections;
+  sections marked + (new hour), → (same hour, new room) or struck out (SU had it at this hour).
+- **By room:** one week grid per teaching room, coloured by course year. Markers show what
   changed from SU's timetable:
   - **+** = a new hour for that class
   - **→** = same hour, but the class moved into this room

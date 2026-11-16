@@ -28,6 +28,15 @@
   const labelOf = (name) => name.split('/').map((s) => s.replace(/_\d+$/, '').replace(/-0$/, '').replace(/-/, ' ')
     .replace(/^([A-Z]+)/, '$1 ')).join(' / ');
   const blocked = new Set(R.settings.blocked);
+  // "MATH101R-A1" -> course "MATH 101R", section "A1"; "MATH409-0/MATH555-0" -> "MATH 409 / MATH 555", ""
+  function courseAndSection(name, codes) {
+    const parts = name.replace(/_\d+$/, '').split('/').map((p) => {
+      const code = [...codes].sort((a, b) => b.length - a.length).find((k) => p.startsWith(k.replace(/\s+/g, ''))) || '';
+      const [type, group = ''] = p.slice(code.replace(/\s+/g, '').length).split('-');
+      return { course: code ? `${code}${type}` : p.split('-')[0], sec: group === '0' ? '' : group };
+    });
+    return { course: [...new Set(parts.map((x) => x.course))].join(' / '), sec: parts[0].sec };
+  }
 
   // ---------- Classes ----------
   // [name, codes, quota, flags, rooms now, SU slots, model slots | null, model room per model slot, SU room per SU slot]
@@ -42,8 +51,10 @@
       fixed: !!(flags & 1), year: yearOf(codes[0]), course: A.courseName(codes[0]),
       newTime: !!model, newRoom: !!mrooms && [...used].some((r) => !suRooms.has(r)), oneRoom: used.size === 1,
       text: `${codes.join(' ')} ${labelOf(name)} ${name}`.toLowerCase().replace(/\s+/g, ''),
+      ...courseAndSection(name, codes), subject: codes[0].split(' ')[0],
     };
   });
+  const subjects = [...new Set(classes.map((c) => c.subject))].sort();
   const placed = classes.filter((c) => c.campus);
   const totalHours = classes.reduce((s, c) => s + c.now.length, 0);
   const kept = classes.reduce((s, c) => s + c.now.filter((x) => c.at.has(x)).length, 0);
@@ -66,12 +77,17 @@
   const buildings = [...new Set(rooms.map((r) => r.building))];
 
   // building, "with changes" and the search are shared by both schedule tabs, so switching compares the same rooms
+  const VIEW_KEY = CURRENT ? 'cs-view' : 'ns-view';
+  const VIEWS = CURRENT ? [['time', 'By time'], ['week', 'By room']] : [['time', 'By time'], ['week', 'By room'], ['list', 'Changes list']];
   const state = {
-    view: CURRENT ? 'week' : A.remember('ns-view', 'week'),
+    view: A.remember(VIEW_KEY, 'time'),
     only: A.remember('ns-only', 'all'),
     bld: A.remember('ns-bld', 'all'),
+    subj: A.remember('ns-subj', 'all'),
     q: '',
   };
+  if (!VIEWS.some(([v]) => v === state.view)) state.view = 'time';
+  if (state.subj !== 'all' && !subjects.includes(state.subj)) state.subj = 'all';
   const normQ = (s) => String(s || '').toLowerCase().replace(/\s+/g, '');
   $('#q').value = A.remember('ns-q', '');
   state.q = normQ($('#q').value);
@@ -132,6 +148,60 @@
     return html + '</div>';
   }
 
+  // ---------- By time: Mon–Fri × 08:40–18:40, every class meeting at that hour, grouped by course ----------
+  const nowAt = new Map();
+  const modelAt = new Map();
+  for (const c of classes) {
+    for (const x of c.now) push(nowAt, x, c);
+    for (const x of c.slots) push(modelAt, x, c);
+  }
+  const markAt = (c, x) => {
+    if (CURRENT) return '';
+    if (!c.now.includes(x)) return 'nt';                                   // new hour
+    if (c.campus && c.at.get(x) && c.at.get(x) !== c.was.get(x)) return 'nr';  // same hour, new room
+    return '';
+  };
+  function timeCell(x) {
+    const keep = (c) => (state.subj === 'all' || c.subject === state.subj) && matches(c)
+      && (state.only !== 'changed' || changed(c));
+    const items = (CURRENT ? nowAt : modelAt).get(x)?.filter(keep).map((c) => ({ c, mark: markAt(c, x) })) || [];
+    if (!CURRENT) {   // classes SU has at this hour and the model moved away: struck out
+      for (const c of nowAt.get(x) || []) if (!c.slots.includes(x) && keep(c)) items.push({ c, mark: 'ghost' });
+    }
+    const groups = new Map();
+    for (const it of items) push(groups, it.c.course, it);
+    const n = items.filter((it) => it.mark !== 'ghost').length;
+    const html = [...groups.entries()].sort((a, b) => A.byCode(a[0], b[0])).map(([course, list]) => {
+      list.sort((a, b) => A.byCode(a.c.sec, b.c.sec));
+      const c0 = list[0].c;
+      const tip = `<b>${esc(course)}</b> · ${esc(c0.course === course ? A.courseName(c0.codes[0]) : '')}`
+        + list.map(({ c, mark }) => {
+          const room = CURRENT ? c.was.get(x) : mark === 'ghost' ? c.was.get(x) : c.at.get(x);
+          let line = `<br>${esc(c.label)} · quota ${c.quota || '?'} · ${esc(room || 'no campus room')}`;
+          if (mark === 'ghost') line += ` · <i>model: ${esc(whereText(c.slots, c.at))}</i>`;
+          else if (changed(c)) line += `<br>&nbsp;&nbsp;SU: ${esc(whereText(c.now, c.was))}<br>&nbsp;&nbsp;Model: ${esc(whereText(c.slots, c.at))}`;
+          return line;
+        }).join('');
+      const secs = list.filter((it) => it.c.sec).map(({ c, mark }) => `<span class="tg-s ${mark}">${esc(c.sec)}</span>`).join('');
+      const solo = list.length === 1 && !list[0].c.sec ? ` ${list[0].mark}` : '';
+      return `<div class="tg-g" data-tip="${esc(tip)}"><span class="wk-chip y${c0.year}${solo}">${esc(course)}</span>${secs}</div>`;
+    }).join('');
+    return { n, html };
+  }
+  function renderTime() {
+    let html = '<div class="card tg-card"><div class="tg"><div class="tg-h"></div>' + A.DAY_NAMES.map((d) => `<div class="tg-h">${d}</div>`).join('');
+    for (let r = 0; r < GRID_ROWS; r++) {
+      html += `<div class="tg-t">${A.rowStart(r)}</div>`;
+      for (let d = 0; d < 5; d++) {
+        const x = d * ROWS + r;
+        if (blocked.has(x)) { html += '<div class="tg-c brk"><span class="wk-brk">break</span></div>'; continue; }
+        const cell = timeCell(x);
+        html += `<div class="tg-c">${cell.n ? `<span class="tg-n">${cell.n}</span>` : ''}${cell.html}</div>`;
+      }
+    }
+    return html + '</div></div>';
+  }
+
   function renderWeek() {
     const shown = rooms.filter((rm) => {
       if (state.bld !== 'all' && rm.building !== state.bld) return false;
@@ -185,28 +255,38 @@
   }
 
   function render() {
-    if (!CURRENT) A.save('ns-view', state.view);
+    A.save(VIEW_KEY, state.view);
     A.save('ns-only', state.only);
     A.save('ns-bld', state.bld);
+    A.save('ns-subj', state.subj);
     const seg = (id, key, opts) => {
       $(id).innerHTML = opts.map(([v, label]) => `<button type="button" data-v="${v}" aria-pressed="${state[key] === v}">${label}</button>`).join('');
     };
-    seg('#view', 'view', [['week', 'Week by room'], ['list', 'Changes list']]);
-    seg('#only', 'only', [['all', 'All rooms'], ['changed', 'With changes']]);
-    $('#view').hidden = CURRENT;
-    $('#only').hidden = state.view !== 'week';
+    const time = state.view === 'time';
+    seg('#view', 'view', VIEWS);
+    $('#view').hidden = false;
+    seg('#only', 'only', time ? [['all', 'All classes'], ['changed', CURRENT ? 'Changed in the model' : 'Only changes']]
+      : [['all', 'All rooms'], ['changed', 'With changes']]);
+    $('#only').hidden = state.view === 'list';
+    $('#bld').hidden = time;
     $('#bld').innerHTML = `<option value="all">All buildings</option>`
       + buildings.map((b) => `<option value="${esc(b)}"${b === state.bld ? ' selected' : ''}>${esc(A.BUILDINGS[b] ? `${b} – ${A.BUILDINGS[b]}` : b)}</option>`).join('');
+    $('#subj').hidden = !time;
+    $('#subj').innerHTML = `<option value="all">All subjects</option>`
+      + subjects.map((s) => `<option value="${esc(s)}"${s === state.subj ? ' selected' : ''}>${esc(s)}</option>`).join('');
 
-    $('#legend').innerHTML = CURRENT
-      ? YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('')
-      : state.view === 'week'
-      ? YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('')
+    const years = YEARS.map(([id, label]) => `<span class="k"><span class="wk-chip y${id}">${label}</span></span>`).join('');
+    $('#legend').innerHTML = CURRENT ? years
+      : time ? years
+        + '<span class="k"><span class="wk-chip y2">MATH 201</span><span class="tg-s nt">A</span> new hour</span>'
+        + '<span class="k"><span class="wk-chip y2">MATH 201</span><span class="tg-s nr">A</span> same hour, new room</span>'
+        + '<span class="k"><span class="wk-chip y2">MATH 201</span><span class="tg-s ghost">A</span> at this hour at SU, not in the model</span>'
+      : state.view === 'week' ? years
         + '<span class="k"><span class="wk-chip y2 nt">CS 300</span> new hour</span>'
         + '<span class="k"><span class="wk-chip y2 nr">CS 300</span> same hour, new room</span>'
         + '<span class="k"><span class="wk-chip y2 ghost">CS 300</span> here at SU, not in the model</span>'
       : '';
-    $('#out').innerHTML = state.view === 'week' ? renderWeek() : renderList();
+    $('#out').innerHTML = time ? renderTime() : state.view === 'week' ? renderWeek() : renderList();
   }
 
   // ---------- Tiles and footnote (do not change with the filters) ----------
@@ -255,6 +335,7 @@
   pick('#view', 'view');
   pick('#only', 'only');
   $('#bld').addEventListener('change', (e) => { state.bld = e.target.value; render(); });
+  $('#subj').addEventListener('change', (e) => { state.subj = e.target.value; render(); });
   let timer = 0;
   $('#q').addEventListener('input', (e) => {
     clearTimeout(timer);

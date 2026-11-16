@@ -29,7 +29,26 @@
 .ns-list .chg { white-space: nowrap; }
 .ns-empty { padding: 14px 16px; color: var(--faint); }
 
+/* By time: Mon–Fri × 08:40–18:40, every class meeting at that hour, grouped by course */
+.tg-card { padding: 0; overflow: hidden; }
+.tg { display: grid; grid-template-columns: 52px repeat(5, minmax(170px, 1fr)); gap: 2px; padding: 10px 12px 14px; overflow-x: auto; font-size: 11.5px; }
+.tg-h { position: sticky; top: 0; padding: 4px; background: var(--card); color: var(--muted); font-weight: 700; text-align: center; z-index: 1; }
+.tg-t { padding: 4px 4px 0 0; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.tg-c { position: relative; display: flex; flex-direction: column; gap: 3px; min-height: 30px; padding: 4px 4px 6px; border-radius: 4px; background: var(--s0); }
+.tg-c.brk { background: repeating-linear-gradient(45deg, #eef0f3 0 6px, #e3e6ea 6px 12px); align-items: center; justify-content: center; }
+.tg-n { align-self: flex-end; margin-bottom: -2px; color: var(--faint); font-size: 10.5px; font-weight: 700; }
+.tg-g { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; border-radius: 3px; }
+.tg-g:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.tg-s { padding: 0 3px; border: 1px solid var(--line); border-radius: 3px; background: var(--card); font-family: var(--mono); font-size: 10px; line-height: 15px; }
+.tg-s.nt { background: #fdf1d8; border-color: #f0b400; box-shadow: 0 0 0 1px #f0b400; }
+.tg-s.nt::before { content: "+"; }
+.tg-s.nr { border-color: #f0b400; box-shadow: 0 0 0 1px #f0b400; }
+.tg-s.nr::before { content: "→"; }
+.tg-s.ghost { color: var(--faint); text-decoration: line-through; border-style: dashed; }
+.wk-chip.ghost::before, .wk-chip.ghost::after { content: none; }
+
 @media (max-width: 760px) {
   .controls input[type="search"] { width: 100%; }
+  .tg { grid-template-columns: 44px repeat(5, minmax(150px, 1fr)); padding: 8px; }
   .ns-list .c-name { display: none; }
 }
