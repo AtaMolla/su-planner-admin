@@ -171,6 +171,7 @@
     ['Binary variables.', true],
     ['On each day a class meets in one block of back-to-back hours (no gaps).', true],
     ['Classes only in SU\'s teaching hours, Mon–Fri 08:40–19:30.', true],
+    ['No partial overlap: two classes of different courses that a Fall semester of a program\'s suggested plan puts together meet on a day either at exactly the same hours or at no common hour (a partial overlap leaves no choice of sections).', R.settings.noPartial !== false],
   ];
   $('#rules').innerHTML = rules.map(([t, on]) => `<li class="${on ? '' : 'off'}">${esc(t)}${on ? '' : ' <span class="badge plain">off for now</span>'}</li>`).join('');
   const D = R.demand;
